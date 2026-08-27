@@ -3,6 +3,7 @@ require("dotenv").config();
 const express = require("express");
 const path = require("path");
 const multer = require("multer");
+const cors = require("cors");
 console.log("Running server from:", __filename);
 console.log("Working directory:", process.cwd());
 const {
@@ -14,6 +15,12 @@ const {
 } = require("./lib/imageprocess");
 const app = express();
 const port = process.env.PORT || 3000;
+app.use(
+  cors({
+    origin:
+      "https://misokol-earthlink.github.io"
+  })
+);
 /*
  * Store uploaded image/PDF files in memory.
  * The uploaded file will be available as req.file.buffer.
