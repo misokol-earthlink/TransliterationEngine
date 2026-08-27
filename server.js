@@ -13,8 +13,7 @@ const {
   processHebrewImage
 } = require("./lib/imageprocess");
 const app = express();
-const port = 3000;
-
+const port = process.env.PORT || 3000;
 /*
  * Store uploaded image/PDF files in memory.
  * The uploaded file will be available as req.file.buffer.
