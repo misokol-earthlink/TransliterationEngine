@@ -1,5 +1,12 @@
+const API_BASE =
+  "https://transliterationengine.onrender.com";
+
 const API = {
-  process: "/process"
+  process:
+    API_BASE + "/process",
+
+  processImage:
+    API_BASE + "/process-image"
 };
 
 const fileInput = document.getElementById("jsonFileInput");
@@ -883,7 +890,7 @@ firstPassFormData.append(
 );
     const firstResponse =
       await fetch(
-        "/process-image",
+  API.processImage,
         {
           method: "POST",
           body: firstPassFormData
