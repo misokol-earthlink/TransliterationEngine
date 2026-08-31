@@ -568,6 +568,9 @@ app.post(
 app.post(
   "/process",
   async (req, res) => {
+ console.log(
+  "POST /process received"
+);
     try {
       const sessionToken =
         getCookie(
