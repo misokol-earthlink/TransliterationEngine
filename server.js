@@ -201,7 +201,40 @@ function encryptApiKey(apiKey) {
       encrypted.toString("hex")
   };
 }
+function decryptApiKey(openaiKey) {
+  const decipher =
+    crypto.createDecipheriv(
+      "aes-256-gcm",
+      encryptionKey,
+      Buffer.from(
+        openaiKey.iv,
+        "hex"
+      )
+    );
 
+  decipher.setAuthTag(
+    Buffer.from(
+      openaiKey.authTag,
+      "hex"
+    )
+  );
+
+  const decrypted =
+    Buffer.concat([
+      decipher.update(
+        Buffer.from(
+          openaiKey.encryptedKey,
+          "hex"
+        )
+      ),
+
+      decipher.final()
+    ]);
+
+  return decrypted.toString(
+    "utf8"
+  );
+}
 
 // --------------------------------------------------
 // Cookie helper
