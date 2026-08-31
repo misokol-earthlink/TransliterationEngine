@@ -417,7 +417,13 @@ const isTester =
   )
     .trim()
     .toLowerCase();
-
+const isDeveloper =
+  email ===
+  String(
+    process.env.DEVELOPER_USER || ""
+  )
+    .trim()
+    .toLowerCase();
 if (!email) {
   return res
     .status(400)
@@ -428,7 +434,11 @@ if (!email) {
     });
 }
 
-if (!isTester && !apiKey) {
+if (
+  !isTester &&
+  !isDeveloper &&
+  !apiKey
+) {
   return res
     .status(400)
     .json({
@@ -442,10 +452,11 @@ if (!isTester && !apiKey) {
         usersFile
       );
 
-  if (isTester) {
+ if (isTester) {
   users[email] = {
     email,
     tester: true,
+    developer: false,
 
     createdAt:
       users[email]?.createdAt ||
@@ -454,11 +465,26 @@ if (!isTester && !apiKey) {
     updatedAt:
       new Date().toISOString()
   };
+
+} else if (isDeveloper) {
+  users[email] = {
+    email,
+    tester: false,
+    developer: true,
+
+    createdAt:
+      users[email]?.createdAt ||
+      new Date().toISOString(),
+
+    updatedAt:
+      new Date().toISOString()
+  };
+
 } else {
   users[email] = {
     email,
     tester: false,
-
+    developer: false,
     openaiKey:
       encryptApiKey(
         apiKey
