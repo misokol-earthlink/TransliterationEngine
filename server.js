@@ -434,25 +434,28 @@ if (!email) {
     });
 }
 
+const users =
+  readJsonFile(
+    usersFile
+  );
+
+const existingUser =
+  users[email];
+
 if (
   !isTester &&
   !isDeveloper &&
-  !apiKey
+  !apiKey &&
+  !existingUser?.openaiKey
 ) {
   return res
     .status(400)
     .json({
       success: false,
       message:
-        "OpenAI API key is required."
+        "OpenAI API key is required for a new user."
     });
-}
-    const users =
-      readJsonFile(
-        usersFile
-      );
-
- if (isTester) {
+} if (isTester) {
   users[email] = {
     email,
     tester: true,
@@ -485,13 +488,14 @@ if (
     email,
     tester: false,
     developer: false,
+
     openaiKey:
-      encryptApiKey(
-        apiKey
-      ),
+      apiKey
+        ? encryptApiKey(apiKey)
+        : existingUser.openaiKey,
 
     createdAt:
-      users[email]?.createdAt ||
+      existingUser?.createdAt ||
       new Date().toISOString(),
 
     updatedAt:
