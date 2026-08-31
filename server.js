@@ -474,7 +474,30 @@ if (!isTester && !apiKey) {
   }
 );
 
+// --------------------------------------------------
+// Logout
+// --------------------------------------------------
 
+app.post(
+  "/logout",
+  (req, res) => {
+
+    res.setHeader(
+      "Set-Cookie",
+
+      "transliteration_session=" +
+        "; HttpOnly" +
+        "; Secure" +
+        "; SameSite=None" +
+        "; Path=/" +
+        "; Max-Age=0"
+    );
+
+    res.json({
+      success: true
+    });
+  }
+);
 // --------------------------------------------------
 // Lyrics JSON transliteration
 // --------------------------------------------------
