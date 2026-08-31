@@ -423,9 +423,10 @@ app.post(
         encodeURIComponent(
           sessionToken
         ) +
-        "; HttpOnly" +
-        "; SameSite=Lax" +
-        "; Path=/" +
+       "; HttpOnly" +
+"; Secure" +
+"; SameSite=None" +
+"; Path=/" +
         "; Max-Age=" +
         (30 * 24 * 60 * 60)
     );
