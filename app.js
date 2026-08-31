@@ -1,6 +1,7 @@
 const API_BASE =
   "https://transliterationengine.onrender.com";
 
+
 const API = {
   process:
     API_BASE + "/process",
@@ -372,6 +373,7 @@ jsonReviewActive = true;
 async function transliterateLyricsJson(jsonData) {
   const response = await fetch(API.process, {
     method: "POST",
+credentials: "include",
     headers: {
       "Content-Type": "application/json"
     },
