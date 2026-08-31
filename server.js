@@ -373,41 +373,72 @@ app.post(
         .toLowerCase();
 
     const apiKey =
-      String(
-        req.body.apiKey || ""
-      ).trim();
+  String(
+    req.body.apiKey || ""
+  ).trim();
 
-    if (!email || !apiKey) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message:
-            "Email and API key are required."
-        });
-    }
+const isTester =
+  email ===
+  String(
+    process.env.TEST_ACCESS_CODE || ""
+  )
+    .trim()
+    .toLowerCase();
 
+if (!email) {
+  return res
+    .status(400)
+    .json({
+      success: false,
+      message:
+        "User ID is required."
+    });
+}
+
+if (!isTester && !apiKey) {
+  return res
+    .status(400)
+    .json({
+      success: false,
+      message:
+        "OpenAI API key is required."
+    });
+}
     const users =
       readJsonFile(
         usersFile
       );
 
-    users[email] = {
-      email,
+  if (isTester) {
+  users[email] = {
+    email,
+    tester: true,
 
-      openaiKey:
-        encryptApiKey(
-          apiKey
-        ),
+    createdAt:
+      users[email]?.createdAt ||
+      new Date().toISOString(),
 
-      createdAt:
-        users[email]?.createdAt ||
-        new Date().toISOString(),
+    updatedAt:
+      new Date().toISOString()
+  };
+} else {
+  users[email] = {
+    email,
+    tester: false,
 
-      updatedAt:
-        new Date().toISOString()
-    };
+    openaiKey:
+      encryptApiKey(
+        apiKey
+      ),
 
+    createdAt:
+      users[email]?.createdAt ||
+      new Date().toISOString(),
+
+    updatedAt:
+      new Date().toISOString()
+  };
+}
     writeJsonFile(
       usersFile,
       users
