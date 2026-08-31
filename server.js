@@ -4,7 +4,7 @@ const fs = require("fs");
 const crypto = require("crypto");
 const multer = require("multer");
 const dotenv = require("dotenv");
-
+const cors = require("cors");
 /*
  * Load the original application's .env first.
  * This currently supplies OPENAI_API_KEY.
@@ -32,8 +32,16 @@ const {
 } = require("./lib/imageprocess");
 
 const app = express();
+
 const port =
   process.env.PORT || 3000;
+app.use(
+  cors({
+    origin:
+      "https://misokol-earthlink.github.io",
+    credentials: true
+  })
+);
 
 /*
  * File upload configuration.
