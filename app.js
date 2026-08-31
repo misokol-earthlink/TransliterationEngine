@@ -28,6 +28,7 @@ const transliterationSummaryTitle =   document.getElementById(   "transliteratio
 const transliterationSummary =   document.getElementById("transliterationSummary");
 const enableTransliterationEditing =    document.getElementById("enableTransliterationEditing");
 const commitTransliterationEditsButton =  document.getElementById("commitTransliterationEditsButton" );
+const logoutButton =   document.getElementById("logoutButton");
 let selectedReviewGapId = null;
 let transliterationEditsCommitted = false;
 let currentJson = null;
@@ -187,6 +188,35 @@ for (
       : []
   };
 }
+
+logoutButton.addEventListener(
+  "click",
+  async function () {
+    try {
+      const response = await fetch(
+        API_BASE + "/logout",
+        {
+          method: "POST",
+          credentials: "include"
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          "Logout failed."
+        );
+      }
+
+      window.location.href =
+        "index.html";
+    } catch (error) {
+      console.error(error);
+      alert(
+        "Unable to log out. Please try again."
+      );
+    }
+  }
+);
 
 fileInput.addEventListener(
   "change",
