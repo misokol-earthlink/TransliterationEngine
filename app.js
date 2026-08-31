@@ -924,8 +924,9 @@ firstPassFormData.append(
       await fetch(
   API.processImage,
         {
-          method: "POST",
-          body: firstPassFormData
+        method: "POST",
+      credentials: "include",
+      body: firstPassFormData
         }
       );
 
