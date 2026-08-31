@@ -657,6 +657,57 @@ app.post(
 
   async (req, res) => {
     try {
+      const sessionToken =
+        getCookie(
+          req,
+          "transliteration_session"
+        );
+
+      const session =
+        findSession(
+          sessionToken
+        );
+
+      if (!session) {
+        return res
+          .status(401)
+          .json({
+            error:
+              "Authentication required."
+          });
+      }
+
+      const users =
+        readJsonFile(
+          usersFile
+        );
+
+      const user =
+        users[session.email];
+
+      if (!user) {
+        return res
+          .status(401)
+          .json({
+            error:
+              "User record not found."
+          });
+      }
+
+      let apiKey;
+
+      if (
+        user.tester ||
+        user.developer
+      ) {
+        apiKey =
+          process.env.OPENAI_API_KEY;
+      } else {
+        apiKey =
+          decryptApiKey(
+            user.openaiKey
+          );
+      }
       if (!req.file) {
         return res
           .status(400)
