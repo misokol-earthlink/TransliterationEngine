@@ -13,7 +13,19 @@ body {
 h1 {
     color: navy;
 }
+.title-row {
+    display: flex;
+    align-items: center;
+    gap: 200px;
+}
 
+.title-row h1 {
+    margin: 0;
+}
+
+#logoutButton {
+    margin-top: 0;
+}
 #status {
     margin-top: 20px;
     padding: 10px;
@@ -272,16 +284,19 @@ color: royalblue;
 
 <body>
 
-<h1>Hebrew Transliteration Engine</h1>
+<div class="title-row">
+  <h1>Hebrew Transliteration Engine</h1>
+
+  <button
+    id="logoutButton"
+    type="button">
+    Logout / Switch User
+  </button>
+</div>
 
 <p>Select a Lyrics JSON file.</p>
-<button
-  id="logoutButton"
-  type="button">
-  Logout / Switch User
-</button>
-<input
-    type="file"
+
+<input    type="file"
     id="jsonFileInput"
     accept=".json,application/json"
 >
