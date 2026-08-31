@@ -1,723 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Hebrew Transliteration Engine</title>
-
-<style>
-body {
-    font-family: Arial, sans-serif;
-    margin: 40px;
-}
-
-h1 {
-    color: navy;
-}
-
-#status {
-    margin-top: 20px;
-    padding: 10px;
-    border: 1px solid gray;
-    background: #f8f8f8;
-}
-
-button {
-    margin-top: 20px;
-    padding: 10px 20px;
-}
-#reviewCharacterPosition,
-#reviewElementType,
-#reviewExistingElement,
-#reviewNewElement {
-  font-family: "Times New Roman", Times, serif;
-  font-size: 16pt;
-  font-weight: bold;
-}
-
-
-#reviewCharacterPosition option,
-#reviewElementType option,
-#reviewNewElement option
-#reviewExistingElement option {
-  font-family: "Times New Roman", Times, serif;
-  font-size: 16pt;
-  font-weight: bold;
-}
-
-
-
-
-.result-line {
-    margin-bottom: 25px;
-    padding: 18px;
-    border: 1px solid #b8b8b8;
-    background: #fafafa;
-}
-
-.line-name {
-    margin-bottom: 16px;
-    color: maroon;
-    font-family: "Times New Roman", serif;
-    font-weight: bold;
-    font-size: 18px;
-}
-
-.hebrew-line {
-    width: 100%;
-    margin-bottom: 12px;
-    color: royalblue;
-    font-family: "Times New Roman", serif;
-    font-size: 28px;
-    line-height: 1.8;
-    direction: rtl;
-    text-align: right;
-}
-
-.translit-line {
-    width: 100%;
-    color: darkgreen;
-    font-family: "Times New Roman", serif;
-    font-size: 20px;
-    line-height: 1.6;
-    direction: ltr;
-    text-align: right;
-}
-
-#reviewModalOverlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.35);
-  z-index: 10000;
-  align-items: center;
-  justify-content: center;
-}
-
-#reviewModal {
-  width: min(700px, 90vw);
-  background: lightgoldenrodyellow;
-  border: 6px solid maroon;
-  border-radius: 10px;
-  padding: 22px;
-  box-sizing: border-box;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
-}
-
-.review-modal-title-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.review-modal-title {
-  margin: 0;
-  font-size: 22px;
-}
-
-.review-modal-close {
-  border: none;
-  background: transparent;
-  font-size: 28px;
-  cursor: pointer;
-}
-
-.review-word-row {
-  display: flex;
-  gap: 24px;
-  justify-content: center;
-  align-items: flex-start;
-}
-
-.review-word-column {
-  flex: 1;
-  text-align: center;
-}
-
-.review-word-label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: bold;
-}
-
-.review-word-box {
-  min-height: 60px;
-  padding: 12px 16px;
-  border: 3px solid black;
-  background: white;
-  box-sizing: border-box;
-
-  direction: rtl;
-  unicode-bidi: isolate;
-  text-align: center;
-
-  font-family: "Times New Roman", serif;
-  font-size: 32px;
-font-weight: bold;
-color: royalblue;
-  line-height: 1.5;
-}
-
-.review-modal-buttons {
-  margin-top: 22px;
-  text-align: center;
-}
-
-.review-editor-controls {
-  margin-top: 22px;
-}
-
-.review-control-group {
-  display: grid;
-  grid-template-columns: 220px 1fr;
-  align-items: center;
-  column-gap: 12px;
-  margin-bottom: 10px;
-}
-
-.review-control-group label {
-  font-size: 18px;
-}
-
-.review-control-group select,
-.review-control-group input {
-  width: 100%;
-  max-width: 320px;
-  padding: 5px 7px;
-  box-sizing: border-box;
-  font-size: 16px;
-}
-
-.review-action-buttons {
-  margin-top: 16px;
-  display: flex;
-  gap: 8px;
-}
-
-.review-action-buttons button {
-  margin-top: 0;
-}
-.review-location-row {
-  display: flex;
-  gap: 30px;
-  margin-bottom: 12px;
-  font-family: Arial, sans-serif;
-  font-size: 16px;
-  font-weight: bold;
-}
-
-#reviewLineNumber,
-#reviewWordNumber {
-  display: inline-block;
-  min-width: 36px;
-  padding: 4px 8px;
-  margin-left: 6px;
-  border: 2px solid black;
-  background: white;
-  text-align: center;
-}
-#linePunctuationModalOverlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.35);
-  z-index: 10000;
-  align-items: center;
-  justify-content: center;
-}
-
-#linePunctuationModal {
-  width: min(900px, 94vw);
-  background: lightgoldenrodyellow;
-  border: 6px solid maroon;
-  border-radius: 10px;
-  padding: 22px;
-  box-sizing: border-box;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
-}
-#transliterationSummary {
-  width: 100%;
-  min-height: 420px;
-  box-sizing: border-box;
-  padding: 18px;
-
-  color: darkgreen;
-  background: #fafafa;
-  border: 1px solid #b8b8b8;
-
-  font-family: "Times New Roman", serif;
-  font-size: 20px;
-  line-height: 1.6;
-
-  direction: ltr;
-  text-align: left;
-
-  resize: vertical;
-}
-#linePunctuationDisplay {
-  direction: ltr;
-
-  display: flex;
-  flex-direction: row-reverse;
-  flex-wrap: wrap;
-
-  justify-content: center;
-  align-items: center;
-
-  gap: 8px;
-
-  text-align: center;
-}</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hebrew Transliteration Engine</title>
 </head>
 
 <body>
 
-<h1>Hebrew Transliteration Engine</h1>
+  <h1>Hebrew Transliteration Engine</h1>
 
-<p>Select a Lyrics JSON file.</p>
-
-<input
-    type="file"
-    id="jsonFileInput"
-    accept=".json,application/json"
->
-
-<button id="processButton" disabled>
-    Process JSON
-</button>
-<button id="openJsonForReviewButton" disabled>
-    Open JSON for Review
-</button>
-<br><br>
-
-<p>Select a Hebrew image or PDF file.</p>
-
-<input
-    type="file"
-    id="imageFileInput"
-    accept=".jpg,.jpeg,.png,.webp,.gif,.bmp,.pdf,image/*,application/pdf"
->
-
-<button
-  id="processImageButton"
-  type="button"
-  disabled>
-  Process Image
-</button>
-
-<label for="expectedLineCount">
-  Number of physical Hebrew lines:
-</label>
-
-<input
-  id="expectedLineCount"
-  type="number"
-  value="-1"
-  min="-1"
-  step="1"
-  style="width: 70px;"
->
-<button id="processExtractedButton" disabled>
-    Process Extracted Hebrew
-</button>
-<br><br>
-
-<button id="downloadReviewButton" disabled>
-    Download Working Review JSON
-</button>
-<label for="reviewFileInput">
-  Open Review JSON:
-</label>
-
-<input
-  type="file"
-  id="reviewFileInput"
-  accept=".json,application/json"
->
-<button id="downloadButton" disabled>
-     Download Current Lyrics JSON
-</button>
-
-<div id="status">
-    No file selected.
-</div>
-<button id="startReviewButton" disabled>
-    Start Review
-</button>
-<!-- ========================================= -->
-<!-- LINE STRUCTURE REVIEW CONTROLS            -->
-<!-- ========================================= -->
-
-<div
-  id="lineStructureControls"
-  style="
-    margin-top: 20px;
-    margin-bottom: 20px;
-    padding: 12px;
-    border: 1px solid #999;
-    background: #f7f7f7;
-  "
->
-  <label for="lineStructureNumber">
-    <b>Choose line number for edits:</b>
-  </label>
-
-  <input
-    id="lineStructureNumber"
-    type="number"
-    value="-1"
-    min="-1"
-    step="1"
-    style="
-      width: 65px;
-      margin-left: 8px;
-    "
-  >
-
-  <div
-    id="lineStructureActions"
-    style="
-      display: none;
-      margin-top: 10px;
-    "
-  >
-    <button
-      id="mergeFollowingLineButton"
-      type="button">
-      Merge with Following Line
-    </button>
-
-    <button
-      id="duplicateLineButton"
-      type="button">
-      Duplicate Line
-    </button>
-
-    <button
-      id="deleteLineButton"
-      type="button">
-      Delete Line
-    </button>
+  <div id="status">
+    Checking registration...
   </div>
 
-  <button
-    id="restoreAllLinesButton"
-    type="button"
-    disabled
-    style="margin-left: 20px;">
-    Restore All Original Lines
-  </button>
-</div>
+  <div id="registrationSection" style="display:none;">
 
-<div id="results"></div>
-<h2
-  id="transliterationSummaryTitle"
-  style="display:none;">
-  Complete Transliteration
+    <h2>Registration</h2>
 
-  <label
-    for="enableTransliterationEditing"
-    style="
-      margin-left: 18px;
-      font-size: 16px;
-      font-weight: normal;
-    ">
-    <input
-      type="checkbox"
-      id="enableTransliterationEditing"
-    >
-    Enable Editing
-  </label>
-</h2>
+    <p>
+      Enter your email address and OpenAI API key.
+    </p>
 
-<textarea
-  id="transliterationSummary"
-  spellcheck="false"
-  readonly
-  style="display:none;">
-</textarea>
-<button
-  id="commitTransliterationEditsButton"
-  type="button"
-  disabled
-  style="display:none;">
-  Commit Transliteration Edits
-</button>
-<!-- Extracted Hebrew Summary -->
-
-<h2
-  id="hebrewSummaryTitle"
-  style="display:none;">
-  Extracted Hebrew Summary
-</h2>
-
-<div
-  id="hebrewSummary"
-  class="resultsBox"
-  style="display:none;">
-</div>
-<script src="app.js?v=20260713A"></script>
-<!-- Review Modal -->
-
-<div id="reviewModalOverlay">
-  <div id="reviewModal">
-
-    <div class="review-modal-title-row">
-      <h2 class="review-modal-title">Review Selected Word</h2>
-
-      <button
-        id="reviewModalCloseX"
-        class="review-modal-close"
-        type="button">
-        ×
-      </button>
+    <div>
+      <label for="emailInput">Email Address</label><br>
+      <input
+        type="text"
+        id="emailInput"
+        autocomplete="email"
+      >
     </div>
 
-    <div class="review-word-row">
+    <br>
 
-      <div class="review-word-column">
-        <span class="review-word-label">Original</span>
-
-        <div
-          id="reviewOriginalWord"
-          class="review-word-box">
-        </div>
-      </div>
-
-      <div class="review-word-column">
-        <span class="review-word-label">Current</span>
-
-        <div
-          id="reviewCurrentWord"
-          class="review-word-box">
-        </div>
-      </div>
-
-    </div>
-<div class="review-editor-controls">
-
-  <div class="review-control-group">
-    <label for="reviewCharacterPosition">
-      </br>Character position
-    </label>
-
-    <select id="reviewCharacterPosition">
-      <option value="">Choose character</option>
-    </select>
-  </div>
-
-  <div class="review-control-group">
-    <label for="reviewElementType">
-      Element
-    </label>
-
-   <select id="reviewElementType">
-  <option value="base">Base letter</option>
-  <option value="mark">Vowel</option>
-  <option value="trope">Trope</option>
-</select>
-  </div>
-
-  <div class="review-control-group">
-    <label for="reviewExistingElement">
-      Existing element
-    </label>
-
-    <select id="reviewExistingElement">
-      <option value="">Choose existing element</option>
-    </select>
-  </div>
-
- <div class="review-control-group">
-  <label for="reviewNewElement">
-    Replacement or new element
-  </label>
-
-  <select id="reviewNewElement">
-    <option value="">
-      Choose replacement or new element
-    </option>
-  </select>
-</div>
-
-  <div class="review-action-buttons">
-    <button
-      id="reviewReplaceButton"
-      type="button">
-      Replace
-    </button>
-
-    <button
-      id="reviewRemoveButton"
-      type="button">
-      Remove
-    </button>
-
-    <button
-      id="reviewAddButton"
-      type="button">
-      Add
-    </button>
-<button
-  id="reviewRestoreButton"
-  type="button">
-  Restore
-</button>
-<button
-  id="reviewCommitButton"
-  type="button">
-  Commit Changes
-</button>
-<button
-  id="reviewAddMetegButton"
-  type="button"
-  style="margin-left: 18px;">
-  Add Meteg
-</button>
-  </div>
-
-</div>
-    <div class="review-modal-buttons">
-
-<div class="review-location-row">
-  <div>
-    <span>Line:</span>
-    <select id="reviewLineNumber">
-</select>
-  </div>
-
-  <div>
-    <span>Word:</span>
-    <span id="reviewWordNumber">1</span>
-  </div>
-</div>
-<button id="reviewPreviousWordButton" type="button">
-  Previous Word
-</button>
-
-<button id="reviewNextWordButton" type="button">
-  Next Word
-</button>
-<button id="reviewPreviousLineButton" type="button">
-  Previous Line
-</button>
-
-<button id="reviewNextLineButton" type="button">
-  Next Line
-</button>
-      <button
-        id="reviewModalCloseButton"
-        type="button">
-        Close
-      </button>
+    <div>
+      <label for="apiKeyInput">OpenAI API Key</label><br>
+      <input
+        type="password"
+        id="apiKeyInput"
+        autocomplete="off"
+      >
     </div>
 
-  </div>
-</div>
-<div id="linePunctuationModalOverlay">
-  <div id="linePunctuationModal">
+    <br>
 
-    <div class="review-modal-title-row">
-      <h2 class="review-modal-title">
-        Line Punctuation Review
-      </h2>
-
-      <button
-        id="linePunctuationModalCloseX"
-        class="review-modal-close"
-        type="button">
-        ×
-      </button>
-    </div>
-
-    <div
-      id="linePunctuationDisplay"
-      class="review-word-box">
-    </div>
-<div class="review-editor-controls">
-
-  <div class="review-control-group">
-    <label>
-      Selected Gap
-    </label>
-
-    <div id="linePunctuationSelectedGap">
-      None
-    </div>
-  </div>
-
-  <div class="review-control-group">
-    <label>
-      Current Punctuation
-    </label>
-
-    <div id="linePunctuationCurrent">
-      None
-    </div>
-  </div>
-
-  <div class="review-control-group">
-    <label for="linePunctuationNew">
-      New Punctuation
-    </label>
-
-    <select id="linePunctuationNew">
-      <option value="">
-        Choose punctuation
-      </option>
-      <option value=",">Comma ,</option>
-      <option value=".">Period .</option>
-      <option value=":">Colon :</option>
-      <option value=";">Semicolon ;</option>
-      <option value="?">Question mark ?</option>
-      <option value="!">Exclamation mark !</option>
-      <option value="־">Hebrew Maqaf ־</option>
-      <option value="׃">Hebrew Sof Pasuq ׃</option>
-    </select>
-  </div>
-
-  <div class="review-action-buttons">
-    <button
-      id="linePunctuationAddButton"
-      type="button">
-      Add
+    <button id="registerButton">
+      Register and Continue
     </button>
 
-    <button
-      id="linePunctuationReplaceButton"
-      type="button">
-      Replace
-    </button>
-
-    <button
-      id="linePunctuationRemoveButton"
-      type="button">
-      Remove
-    </button>
-
-    <button
-      id="linePunctuationRestoreButton"
-      type="button">
-      Restore
-    </button>
-
-    <button
-      id="linePunctuationCommitButton"
-      type="button">
-      Commit Changes
-    </button>
   </div>
 
-</div>
-    <div class="review-modal-buttons">
-      <button
-        id="linePunctuationModalCloseButton"
-        type="button">
-        Close
-      </button>
-    </div>
+  <script>
 
-  </div>
-</div>
+    const API_BASE =
+      "https://transliterationengine.onrender.com";
+
+    const status =
+      document.getElementById("status");
+
+    const registrationSection =
+      document.getElementById(
+        "registrationSection"
+      );
+
+    const registerButton =
+      document.getElementById(
+        "registerButton"
+      );
+
+    async function checkSession() {
+
+      try {
+
+        const response =
+          await fetch(
+            API_BASE + "/session",
+            {
+              method: "GET",
+              credentials: "include"
+            }
+          );
+
+        const result =
+          await response.json();
+
+        if (result.authenticated) {
+
+          status.textContent =
+            "Registration found. Opening application...";
+
+          window.location.href =
+            "TransliterationEngine.html";
+
+          return;
+        }
+
+      } catch (error) {
+
+        console.error(
+          "Session check failed:",
+          error
+        );
+      }
+
+      status.textContent =
+        "Registration required.";
+
+      registrationSection.style.display =
+        "block";
+    }
+
+
+    registerButton.addEventListener(
+      "click",
+      async function () {
+
+        const email =
+          document
+            .getElementById("emailInput")
+            .value
+            .trim();
+
+        const apiKey =
+          document
+            .getElementById("apiKeyInput")
+            .value
+            .trim();
+
+        status.textContent =
+          "Registering...";
+
+        try {
+
+          const response =
+            await fetch(
+              API_BASE + "/register",
+              {
+                method: "POST",
+
+                headers: {
+                  "Content-Type":
+                    "application/json"
+                },
+
+                credentials: "include",
+
+                body: JSON.stringify({
+                  email,
+                  apiKey
+                })
+              }
+            );
+
+          const result =
+            await response.json();
+
+          if (!response.ok) {
+
+            throw new Error(
+              result.error ||
+              "Registration failed."
+            );
+          }
+
+          status.textContent =
+            "Registration successful. Opening application...";
+
+          window.location.href =
+            "TransliterationEngine.html";
+
+        } catch (error) {
+
+          console.error(
+            "Registration failed:",
+            error
+          );
+
+          status.textContent =
+            error.message;
+        }
+      }
+    );
+
+
+    checkSession();
+
+  </script>
+
 </body>
 </html>
