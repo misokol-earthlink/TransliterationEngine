@@ -1133,14 +1133,16 @@ function formatFileSize(bytes) {
 }
 
 async function processExtractedHebrew() {
-  if (!extractedJson) {
+  if (
+    !reviewJson ||
+    !Array.isArray(reviewJson.lines)
+  ) {
     status.innerHTML =
       "<span style='color:red'>" +
-      "No extracted Hebrew is available to process." +
+      "No reviewed Hebrew is available to process." +
       "</span>";
     return;
   }
-
   processExtractedButton.disabled = true;
   downloadButton.disabled = true;
 
@@ -1148,8 +1150,13 @@ async function processExtractedHebrew() {
     "<b>Transliterating extracted Hebrew...</b>";
 
   try {
-    currentJson =
-      await transliterateLyricsJson(extractedJson);
+    const reviewedLyricsJson =
+  buildLyricsJsonFromReview();
+
+currentJson =
+  await transliterateLyricsJson(
+    reviewedLyricsJson
+  );
 
     displayProcessedLines(currentJson);
 
@@ -2090,15 +2097,18 @@ function commitReviewChanges() {
 
   reviewModalWorkingHebrew = null;
 
-  if (reviewJson) {
-    displayExtractedHebrew(
-      reviewJson
-    );
-  }
+ if (reviewJson) {
+  displayExtractedHebrew(
+    reviewJson
+  );
 
-  document.getElementById(
-    "reviewModalOverlay"
-  ).style.display = "none";
+  processExtractedButton.disabled =
+    false;
+}
+
+document.getElementById(
+  "reviewModalOverlay"
+).style.display = "none";
 }
 function restoreReviewWord() {
   if (!activeReviewWord) {
