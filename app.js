@@ -222,7 +222,15 @@ fileInput.addEventListener(
   "change",
   loadJsonFile
 );
+closeLineStructureButton.addEventListener(
+  "click",
+  function () {
+    lineStructureNumber.value =
+      "-1";
 
+    refreshLineStructureControls();
+  }
+);
 processButton.addEventListener(
   "click",
   processJson
@@ -3000,6 +3008,11 @@ enableTransliterationEditing.addEventListener(
     }
   }
 );
+const closeLineStructureButton =
+  document.getElementById(
+    "closeLineStructureButton"
+  );
+
     document.getElementById(
       "reviewLineNumber"
     ).addEventListener(
@@ -3293,11 +3306,14 @@ transliterationSummary.addEventListener(
       );
 
     if (
-      lineStructureNumber &&
-      mergeFollowingLineButton &&
-      duplicateLineButton &&
-      deleteLineButton &&
-      restoreAllLinesButton
+      if (
+  lineStructureNumber &&
+  mergeFollowingLineButton &&
+  duplicateLineButton &&
+  deleteLineButton &&
+  restoreAllLinesButton &&
+  closeLineStructureButton
+) {
     ) {
       lineStructureNumber.addEventListener(
         "input",
