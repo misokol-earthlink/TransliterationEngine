@@ -3305,8 +3305,7 @@ transliterationSummary.addEventListener(
         "restoreAllLinesButton"
       );
 
-    if (
-      if (
+   if (
   lineStructureNumber &&
   mergeFollowingLineButton &&
   duplicateLineButton &&
@@ -3314,7 +3313,6 @@ transliterationSummary.addEventListener(
   restoreAllLinesButton &&
   closeLineStructureButton
 ) {
-    ) {
       lineStructureNumber.addEventListener(
         "input",
         refreshLineStructureControls
