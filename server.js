@@ -733,7 +733,6 @@ app.post(
       }
 
       const extractedJson =
-      const extractedJson =
   await processHebrewImage(
     req.file.buffer,
     req.file.originalname,
