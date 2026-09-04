@@ -44,8 +44,65 @@
 
     <br>
 
-    <button id="registerButton">
-      Register and Continue
+    <div id="termsSection">
+
+      <h3>Terms of Use</h3>
+
+      <p>
+        This is temporary text for testing the
+        user-acceptance process.
+      </p>
+
+      <p>
+        You must accept the terms of use before
+        continuing to the Transliteration Engine.
+      </p>
+
+      <label>
+        <input
+          type="checkbox"
+          id="acceptTerms"
+        >
+        I accept the Terms of Use.
+      </label>
+
+    </div>
+
+    <br>
+
+    <div
+      id="otpSection"
+      style="display:none;"
+    >
+      <label for="otpInput">
+        Verification Code
+      </label>
+      <br>
+
+      <input
+        type="text"
+        id="otpInput"
+        inputmode="numeric"
+        autocomplete="one-time-code"
+      >
+
+      <br><br>
+
+      <button
+        type="button"
+        id="verifyOtpButton"
+      >
+        Verify Code
+      </button>
+    </div>
+
+    <br>
+
+    <button
+      type="button"
+      id="registerButton"
+    >
+      Continue
     </button>
 
   </div>
@@ -68,10 +125,9 @@
         "registerButton"
       );
 
+
     async function checkSession() {
-
       try {
-
         const response =
           await fetch(
             API_BASE + "/session",
@@ -85,7 +141,6 @@
           await response.json();
 
         if (result.authenticated) {
-
           status.textContent =
             "Registration found. Opening application...";
 
@@ -96,7 +151,6 @@
         }
 
       } catch (error) {
-
         console.error(
           "Session check failed:",
           error
@@ -111,10 +165,56 @@
     }
 
 
+    async function completeRegistration(
+      email,
+      apiKey,
+      acceptedTerms,
+      accessToken
+    ) {
+      const response =
+        await fetch(
+          API_BASE + "/register",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json"
+            },
+
+            credentials: "include",
+
+            body: JSON.stringify({
+              email,
+              apiKey,
+              acceptedTerms,
+              accessToken
+            })
+          }
+        );
+
+      const result =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.message ||
+          result.error ||
+          "Registration failed."
+        );
+      }
+
+      status.textContent =
+        "Registration successful. Opening application...";
+
+      window.location.href =
+        "TransliterationEngine.html";
+    }
+
+
     registerButton.addEventListener(
       "click",
       async function () {
-
         const email =
           document
             .getElementById("emailInput")
@@ -127,14 +227,25 @@
             .value
             .trim();
 
+        const acceptedTerms =
+          document
+            .getElementById("acceptTerms")
+            .checked;
+
+        if (!acceptedTerms) {
+          status.textContent =
+            "You must accept the Terms of Use before continuing.";
+
+          return;
+        }
+
         status.textContent =
-          "Registering...";
+          "Checking registration...";
 
         try {
-
           const response =
             await fetch(
-              API_BASE + "/register",
+              API_BASE + "/auth/start",
               {
                 method: "POST",
 
@@ -146,8 +257,7 @@
                 credentials: "include",
 
                 body: JSON.stringify({
-                  email,
-                  apiKey
+                  email
                 })
               }
             );
@@ -156,23 +266,37 @@
             await response.json();
 
           if (!response.ok) {
-
             throw new Error(
-              result.error ||
-              "Registration failed."
+              result.message ||
+              "Unable to start registration."
             );
           }
 
-          status.textContent =
-            "Registration successful. Opening application...";
+          if (result.bypass) {
+            status.textContent =
+              "Continuing...";
 
-          window.location.href =
-            "TransliterationEngine.html";
+            await completeRegistration(
+              email,
+              apiKey,
+              acceptedTerms,
+              null
+            );
+
+            return;
+          }
+
+          document.getElementById(
+            "otpSection"
+          ).style.display =
+            "block";
+
+          status.textContent =
+            "A verification code has been sent to your email address.";
 
         } catch (error) {
-
           console.error(
-            "Registration failed:",
+            "Registration start failed:",
             error
           );
 
@@ -181,6 +305,95 @@
         }
       }
     );
+
+
+    document
+      .getElementById("verifyOtpButton")
+      .addEventListener(
+        "click",
+        async function () {
+          const email =
+            document
+              .getElementById("emailInput")
+              .value
+              .trim();
+
+          const apiKey =
+            document
+              .getElementById("apiKeyInput")
+              .value
+              .trim();
+
+          const acceptedTerms =
+            document
+              .getElementById("acceptTerms")
+              .checked;
+
+          const token =
+            document
+              .getElementById("otpInput")
+              .value
+              .trim();
+
+          if (!token) {
+            status.textContent =
+              "Enter the verification code sent to your email address.";
+
+            return;
+          }
+
+          status.textContent =
+            "Verifying email address...";
+
+          try {
+            const response =
+              await fetch(
+                API_BASE + "/auth/verify",
+                {
+                  method: "POST",
+
+                  headers: {
+                    "Content-Type":
+                      "application/json"
+                  },
+
+                  credentials: "include",
+
+                  body: JSON.stringify({
+                    email,
+                    token
+                  })
+                }
+              );
+
+            const result =
+              await response.json();
+
+            if (!response.ok) {
+              throw new Error(
+                result.message ||
+                "Verification failed."
+              );
+            }
+
+            await completeRegistration(
+              email,
+              apiKey,
+              acceptedTerms,
+              result.accessToken
+            );
+
+          } catch (error) {
+            console.error(
+              "Email verification failed:",
+              error
+            );
+
+            status.textContent =
+              error.message;
+          }
+        }
+      );
 
 
     checkSession();
