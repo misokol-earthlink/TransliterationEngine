@@ -32,6 +32,18 @@ const supabase =
       }
     }
   );
+
+const supabaseAuth =
+  createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_PUBLISHABLE_KEY,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false
+      }
+    }
+  );
 //const {  transliterateJson} = require("../lib/transliterate");
 
 //const {  processHebrewImage} = require("../lib/imageprocess");
@@ -402,14 +414,234 @@ app.get(
   }
 );
 
+async function getOrCreateSupabaseAuthUser(
+  email
+) {
+  const {
+    data: listData,
+    error: listError
+  } =
+    await supabase.auth.admin.listUsers();
 
+  if (listError) {
+    throw listError;
+  }
+
+  const existingUser =
+    listData.users.find(
+      function(user) {
+        return (
+          String(
+            user.email || ""
+          )
+            .trim()
+            .toLowerCase() ===
+          email
+        );
+      }
+    );
+
+  if (existingUser) {
+    return existingUser;
+  }
+
+  const {
+    data: createData,
+    error: createError
+  } =
+    await supabase.auth.admin.createUser({
+      email,
+      email_confirm: true
+    });
+
+  if (createError) {
+    throw createError;
+  }
+
+  return createData.user;
+}
+
+// --------------------------------------------------
+// Start Supabase email authentication
+// --------------------------------------------------
+
+app.post(
+  "/auth/start",
+  async (req, res) => {
+    try {
+      const email =
+        String(
+          req.body.email || ""
+        )
+          .trim()
+          .toLowerCase();
+
+      if (!email) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message:
+              "Email address is required."
+          });
+      }
+
+      const isTester =
+        email ===
+        String(
+          process.env.TEST_ACCESS_CODE || ""
+        )
+          .trim()
+          .toLowerCase();
+
+      const isDeveloper =
+        email ===
+        String(
+          process.env.DEVELOPER_USER || ""
+        )
+          .trim()
+          .toLowerCase();
+
+      /*
+       * Developer and tester/backdoor users
+       * do not use Supabase email verification.
+       */
+      if (
+        isTester ||
+        isDeveloper
+      ) {
+        return res.json({
+          success: true,
+          bypass: true
+        });
+      }
+
+      const {
+        error
+      } =
+        await supabaseAuth.auth.signInWithOtp({
+          email,
+          options: {
+            shouldCreateUser: true
+          }
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      res.json({
+        success: true,
+        bypass: false
+      });
+
+    } catch (error) {
+      console.error(
+        "Supabase OTP start failed:"
+      );
+
+      console.error(error);
+
+      res.status(500).json({
+        success: false,
+        message:
+          "Unable to send verification code."
+      });
+    }
+  }
+);
+
+// --------------------------------------------------
+// Verify Supabase email authentication
+// --------------------------------------------------
+
+app.post(
+  "/auth/verify",
+  async (req, res) => {
+    try {
+      const email =
+        String(
+          req.body.email || ""
+        )
+          .trim()
+          .toLowerCase();
+
+      const token =
+        String(
+          req.body.token || ""
+        )
+          .trim();
+
+      if (
+        !email ||
+        !token
+      ) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message:
+              "Email address and verification code are required."
+          });
+      }
+
+      const {
+        data,
+        error
+      } =
+        await supabaseAuth.auth.verifyOtp({
+          email,
+          token,
+          type: "email"
+        });
+
+      if (error) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message:
+              "The verification code is invalid or has expired."
+          });
+      }
+
+      if (
+        !data.user ||
+        !data.session
+      ) {
+        throw new Error(
+          "Supabase did not return an authenticated user session."
+        );
+      }
+
+      res.json({
+        success: true,
+        accessToken:
+          data.session.access_token
+      });
+
+    } catch (error) {
+      console.error(
+        "Supabase OTP verification failed:"
+      );
+
+      console.error(error);
+
+      res.status(500).json({
+        success: false,
+        message:
+          "Unable to verify the email address."
+      });
+    }
+  }
+);
 // --------------------------------------------------
 // Registration
 // --------------------------------------------------
 
 app.post(
   "/register",
-  (req, res) => {
+  async (req, res) => {
     const email =
       String(
         req.body.email || ""
@@ -420,6 +652,15 @@ app.post(
     const apiKey =
   String(
     req.body.apiKey || ""
+  ).trim();
+
+
+const acceptedTerms =
+  req.body.acceptedTerms === true;
+
+const accessToken =
+  String(
+    req.body.accessToken || ""
   ).trim();
 
 const isTester =
@@ -446,79 +687,321 @@ if (!email) {
     });
 }
 
-const users =
-  readJsonFile(
-    usersFile
-  );
-
-const existingUser =
-  users[email];
-
 if (
   !isTester &&
   !isDeveloper &&
-  !apiKey &&
-  !existingUser?.openaiKey
+  !acceptedTerms
 ) {
   return res
     .status(400)
     .json({
       success: false,
       message:
-        "OpenAI API key is required for a new user."
+        "You must accept the terms of use before continuing."
     });
-} if (isTester) {
-  users[email] = {
-    email,
-    tester: true,
-    developer: false,
-
-    createdAt:
-      users[email]?.createdAt ||
-      new Date().toISOString(),
-
-    updatedAt:
-      new Date().toISOString()
-  };
-
-} else if (isDeveloper) {
-  users[email] = {
-    email,
-    tester: false,
-    developer: true,
-
-    createdAt:
-      users[email]?.createdAt ||
-      new Date().toISOString(),
-
-    updatedAt:
-      new Date().toISOString()
-  };
-
-} else {
-  users[email] = {
-    email,
-    tester: false,
-    developer: false,
-
-    openaiKey:
-      apiKey
-        ? encryptApiKey(apiKey)
-        : existingUser.openaiKey,
-
-    createdAt:
-      existingUser?.createdAt ||
-      new Date().toISOString(),
-
-    updatedAt:
-      new Date().toISOString()
-  };
 }
-    writeJsonFile(
-      usersFile,
-      users
+if (
+  !isTester &&
+  !isDeveloper &&
+  !accessToken
+) {
+  return res
+    .status(401)
+    .json({
+      success: false,
+      message:
+        "Email verification is required."
+    });
+}
+let authUser = null;
+
+if (
+  !isTester &&
+  !isDeveloper
+) {
+  const {
+    data,
+    error
+  } =
+    await supabaseAuth.auth.getUser(
+      accessToken
     );
 
+  if (
+    error ||
+    !data.user
+  ) {
+    return res
+      .status(401)
+      .json({
+        success: false,
+        message:
+          "Email verification could not be confirmed."
+      });
+  }
+
+  authUser =
+    data.user;
+
+  if (
+    String(
+      authUser.email || ""
+    )
+      .trim()
+      .toLowerCase() !==
+    email
+  ) {
+    return res
+      .status(401)
+      .json({
+        success: false,
+        message:
+          "Verified email does not match the registration email."
+      });
+  }
+}
+let openaiSecretId = null;
+
+if (
+  !isTester &&
+  !isDeveloper
+) {
+  const {
+    data: existingSupabaseUser,
+    error: existingSupabaseUserError
+  } =
+    await supabase
+      .from("te_users")
+      .select(
+        "openai_secret_id, access_allowed"
+      )
+      .eq(
+        "auth_user_id",
+        authUser.id
+      )
+      .maybeSingle();
+
+  if (existingSupabaseUserError) {
+    console.error(
+      "TEUsers lookup failed:"
+    );
+
+    console.error(
+      existingSupabaseUserError
+    );
+
+    return res
+      .status(500)
+      .json({
+        success: false,
+        message:
+          "Unable to check user registration."
+      });
+  }
+
+  /*
+   * Existing user:
+   * reuse the already stored Vault secret.
+   */
+  if (existingSupabaseUser) {
+    if (
+      existingSupabaseUser.access_allowed !== true
+    ) {
+      return res
+        .status(403)
+        .json({
+          success: false,
+          message:
+            "User access has been disabled."
+        });
+    }
+
+    if (
+      !existingSupabaseUser.openai_secret_id
+    ) {
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message:
+            "No stored OpenAI API key was found for this user."
+        });
+    }
+
+    openaiSecretId =
+      existingSupabaseUser.openai_secret_id;
+
+    const now =
+      new Date().toISOString();
+
+    const {
+      error: updateError
+    } =
+      await supabase
+        .from("te_users")
+        .update({
+          terms_accepted_at:
+            now,
+
+          updated_at:
+            now
+        })
+        .eq(
+          "auth_user_id",
+          authUser.id
+        );
+
+    if (updateError) {
+      console.error(
+        "TEUsers update failed:"
+      );
+
+      console.error(
+        updateError
+      );
+
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message:
+            "Unable to update user registration."
+        });
+    }
+
+  } else {
+    /*
+     * New user:
+     * an OpenAI API key is required.
+     */
+    if (!apiKey) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message:
+            "OpenAI API key is required for a new user."
+        });
+    }
+
+    const {
+      data: secretId,
+      error: secretError
+    } =
+      await supabase.rpc(
+        "store_openai_secret",
+        {
+          secret_value:
+            apiKey,
+
+          secret_name:
+            "openai-" +
+            authUser.id
+        }
+      );
+
+    if (
+      secretError ||
+      !secretId
+    ) {
+      console.error(
+        "OpenAI key Vault storage failed:"
+      );
+
+      console.error(
+        secretError
+      );
+
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message:
+            "Unable to securely store the OpenAI API key."
+        });
+    }
+
+    openaiSecretId =
+      secretId;
+
+    const now =
+      new Date().toISOString();
+
+    const {
+      error: insertError
+    } =
+      await supabase
+        .from("te_users")
+        .insert({
+          auth_user_id:
+            authUser.id,
+
+          email:
+            email,
+
+          openai_secret_id:
+            openaiSecretId,
+
+          access_allowed:
+            true,
+
+          terms_accepted_at:
+            now,
+
+          updated_at:
+            now
+        });
+
+    if (insertError) {
+      console.error(
+        "TEUsers record storage failed:"
+      );
+
+      console.error(
+        insertError
+      );
+
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message:
+            "Unable to complete user registration."
+        });
+    }
+  }
+}
+if (
+  isTester ||
+  isDeveloper
+) {
+  const users =
+    readJsonFile(
+      usersFile
+    );
+
+  users[email] = {
+    email,
+
+    tester:
+      isTester,
+
+    developer:
+      isDeveloper,
+
+    createdAt:
+      users[email]?.createdAt ||
+      new Date().toISOString(),
+
+    updatedAt:
+      new Date().toISOString()
+  };
+
+  writeJsonFile(
+    usersFile,
+    users
+  );
+}
     const sessionToken =
       createSession(email);
 
@@ -604,38 +1087,123 @@ app.post(
           });
       }
 
-      const users =
-        readJsonFile(
-          usersFile
-        );
-
-      const user =
-        users[session.email];
-
-      if (!user) {
-        return res
-          .status(401)
-          .json({
-            error:
-              "User record not found."
-          });
-      }
-
       let apiKey;
 
-      if (
-        user.tester ||
-        user.developer
-      ) {
-        apiKey =
-          process.env.OPENAI_API_KEY;
-      } else {
-        apiKey =
-          decryptApiKey(
-            user.openaiKey
-          );
-      }
+const sessionEmail =
+  String(
+    session.email || ""
+  )
+    .trim()
+    .toLowerCase();
 
+const isTester =
+  sessionEmail ===
+  String(
+    process.env.TEST_ACCESS_CODE || ""
+  )
+    .trim()
+    .toLowerCase();
+
+const isDeveloper =
+  sessionEmail ===
+  String(
+    process.env.DEVELOPER_USER || ""
+  )
+    .trim()
+    .toLowerCase();
+
+if (
+  isTester ||
+  isDeveloper
+) {
+  apiKey =
+    process.env.OPENAI_API_KEY;
+
+} else {
+  const {
+    data: userRecord,
+    error: userRecordError
+  } =
+    await supabase
+      .from("te_users")
+      .select(
+        "openai_secret_id, access_allowed"
+      )
+      .eq(
+        "email",
+        sessionEmail
+      )
+      .single();
+
+  if (
+    userRecordError ||
+    !userRecord
+  ) {
+    return res
+      .status(401)
+      .json({
+        error:
+          "User record not found."
+      });
+  }
+
+  if (
+    userRecord.access_allowed !== true
+  ) {
+    return res
+      .status(403)
+      .json({
+        error:
+          "User access has been disabled."
+      });
+  }
+
+  if (
+    !userRecord.openai_secret_id
+  ) {
+    return res
+      .status(500)
+      .json({
+        error:
+          "No OpenAI API key is stored for this user."
+      });
+  }
+
+  const {
+    data: storedApiKey,
+    error: secretError
+  } =
+    await supabase.rpc(
+      "get_openai_secret",
+      {
+        secret_id:
+          userRecord.openai_secret_id
+      }
+    );
+
+  if (
+    secretError ||
+    !storedApiKey
+  ) {
+    console.error(
+      "OpenAI key retrieval failed:"
+    );
+
+    console.error(
+      secretError
+    );
+
+    return res
+      .status(500)
+      .json({
+        error:
+          "Unable to retrieve the OpenAI API key."
+      });
+  }
+
+  apiKey =
+    storedApiKey;
+}
       const updatedJson =
         await transliterateJson(
           req.body,
@@ -692,38 +1260,123 @@ app.post(
           });
       }
 
-      const users =
-        readJsonFile(
-          usersFile
-        );
+let apiKey;
 
-      const user =
-        users[session.email];
+const sessionEmail =
+  String(
+    session.email || ""
+  )
+    .trim()
+    .toLowerCase();
 
-      if (!user) {
-        return res
-          .status(401)
-          .json({
-            error:
-              "User record not found."
-          });
+const isTester =
+  sessionEmail ===
+  String(
+    process.env.TEST_ACCESS_CODE || ""
+  )
+    .trim()
+    .toLowerCase();
+
+const isDeveloper =
+  sessionEmail ===
+  String(
+    process.env.DEVELOPER_USER || ""
+  )
+    .trim()
+    .toLowerCase();
+
+if (
+  isTester ||
+  isDeveloper
+) {
+  apiKey =
+    process.env.OPENAI_API_KEY;
+
+} else {
+  const {
+    data: userRecord,
+    error: userRecordError
+  } =
+    await supabase
+      .from("te_users")
+      .select(
+        "openai_secret_id, access_allowed"
+      )
+      .eq(
+        "email",
+        sessionEmail
+      )
+      .single();
+
+  if (
+    userRecordError ||
+    !userRecord
+  ) {
+    return res
+      .status(401)
+      .json({
+        error:
+          "User record not found."
+      });
+  }
+
+  if (
+    userRecord.access_allowed !== true
+  ) {
+    return res
+      .status(403)
+      .json({
+        error:
+          "User access has been disabled."
+      });
+  }
+
+  if (
+    !userRecord.openai_secret_id
+  ) {
+    return res
+      .status(500)
+      .json({
+        error:
+          "No OpenAI API key is stored for this user."
+      });
+  }
+
+  const {
+    data: storedApiKey,
+    error: secretError
+  } =
+    await supabase.rpc(
+      "get_openai_secret",
+      {
+        secret_id:
+          userRecord.openai_secret_id
       }
+    );
 
-      let apiKey;
+  if (
+    secretError ||
+    !storedApiKey
+  ) {
+    console.error(
+      "OpenAI key retrieval failed:"
+    );
 
-      if (
-        user.tester ||
-        user.developer
-      ) {
-        apiKey =
-          process.env.OPENAI_API_KEY;
-      } else {
-        apiKey =
-          decryptApiKey(
-            user.openaiKey
-          );
-      }
-      if (!req.file) {
+    console.error(
+      secretError
+    );
+
+    return res
+      .status(500)
+      .json({
+        error:
+          "Unable to retrieve the OpenAI API key."
+      });
+  }
+
+  apiKey =
+    storedApiKey;
+}      if (!req.file) {
         return res
           .status(400)
           .json({
