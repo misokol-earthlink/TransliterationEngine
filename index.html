@@ -18,11 +18,11 @@
 
     <h2>Registration</h2>
 
-    <p>
+    <p id="registrationInstructions">
       Enter your email address to continue.
     </p>
 
-    <div>
+    <div id="emailSection">
       <label for="emailInput">Email Address</label><br>
       <input
         type="text"
@@ -70,34 +70,6 @@
 
     <br>
 
-    <div
-      id="otpSection"
-      style="display:none;"
-    >
-      <label for="otpInput">
-        Verification Code
-      </label>
-      <br>
-
-      <input
-        type="text"
-        id="otpInput"
-        inputmode="numeric"
-        autocomplete="one-time-code"
-      >
-
-      <br><br>
-
-      <button
-        type="button"
-        id="verifyOtpButton"
-      >
-        Verify Code
-      </button>
-    </div>
-
-    <br>
-
     <button
       type="button"
       id="registerButton"
@@ -120,12 +92,85 @@
         "registrationSection"
       );
 
+    const registrationInstructions =
+      document.getElementById(
+        "registrationInstructions"
+      );
+
+    const emailSection =
+      document.getElementById(
+        "emailSection"
+      );
+
+    const emailInput =
+      document.getElementById(
+        "emailInput"
+      );
+
+    const apiKeySection =
+      document.getElementById(
+        "apiKeySection"
+      );
+
+    const apiKeyInput =
+      document.getElementById(
+        "apiKeyInput"
+      );
+
+    const termsSection =
+      document.getElementById(
+        "termsSection"
+      );
+
+    const acceptTerms =
+      document.getElementById(
+        "acceptTerms"
+      );
+
     const registerButton =
       document.getElementById(
         "registerButton"
       );
 
     let verifiedAccessToken = null;
+    let verifiedEmail = null;
+    let newUserRegistration = false;
+
+
+    function clearAuthFragment() {
+      if (!window.location.hash) {
+        return;
+      }
+
+      window.history.replaceState(
+        null,
+        "",
+        window.location.pathname +
+          window.location.search
+      );
+    }
+
+
+    function getAccessTokenFromUrl() {
+      const hash =
+        String(
+          window.location.hash || ""
+        );
+
+      if (!hash.startsWith("#")) {
+        return null;
+      }
+
+      const params =
+        new URLSearchParams(
+          hash.substring(1)
+        );
+
+      return (
+        params.get("access_token") ||
+        null
+      );
+    }
 
 
     async function checkSession() {
@@ -149,7 +194,7 @@
           window.location.href =
             "TransliterationEngine.html";
 
-          return;
+          return true;
         }
 
       } catch (error) {
@@ -164,13 +209,15 @@
 
       registrationSection.style.display =
         "block";
+
+      return false;
     }
 
 
     async function completeRegistration(
       email,
       apiKey,
-      acceptedTerms,
+      acceptedTermsValue,
       accessToken
     ) {
       const response =
@@ -189,7 +236,8 @@
             body: JSON.stringify({
               email,
               apiKey,
-              acceptedTerms,
+              acceptedTerms:
+                acceptedTermsValue,
               accessToken
             })
           }
@@ -214,27 +262,135 @@
     }
 
 
+    async function processMagicLinkReturn(
+      accessToken
+    ) {
+      status.textContent =
+        "Verifying sign-in...";
+
+      try {
+        const response =
+          await fetch(
+            API_BASE + "/auth/status",
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
+
+              credentials: "include",
+
+              body: JSON.stringify({
+                accessToken
+              })
+            }
+          );
+
+        const result =
+          await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            result.message ||
+            "Unable to verify sign-in."
+          );
+        }
+
+        verifiedAccessToken =
+          accessToken;
+
+        verifiedEmail =
+          String(
+            result.email || ""
+          )
+            .trim()
+            .toLowerCase();
+
+        clearAuthFragment();
+
+        if (!verifiedEmail) {
+          throw new Error(
+            "Verified email address was not returned."
+          );
+        }
+
+        if (result.existingUser) {
+          await completeRegistration(
+            verifiedEmail,
+            "",
+            false,
+            verifiedAccessToken
+          );
+
+          return;
+        }
+
+        newUserRegistration =
+          true;
+
+        emailInput.value =
+          verifiedEmail;
+
+        emailInput.readOnly =
+          true;
+
+        emailSection.style.display =
+          "block";
+
+        apiKeySection.style.display =
+          "block";
+
+        termsSection.style.display =
+          "block";
+
+        registrationSection.style.display =
+          "block";
+
+        registrationInstructions.textContent =
+          "New registration. Enter your OpenAI API key and accept the Terms of Use.";
+
+        status.textContent =
+          "Email verified.";
+
+      } catch (error) {
+        console.error(
+          "Magic-link verification failed:",
+          error
+        );
+
+        clearAuthFragment();
+
+        verifiedAccessToken =
+          null;
+
+        verifiedEmail =
+          null;
+
+        newUserRegistration =
+          false;
+
+        status.textContent =
+          error.message;
+
+        registrationSection.style.display =
+          "block";
+      }
+    }
+
+
     registerButton.addEventListener(
       "click",
       async function () {
-        const email =
-          document
-            .getElementById("emailInput")
-            .value
-            .trim();
 
-        const apiKey =
-          document
-            .getElementById("apiKeyInput")
-            .value
-            .trim();
+        if (newUserRegistration) {
+          const apiKey =
+            apiKeyInput.value.trim();
 
-        const acceptedTerms =
-          document
-            .getElementById("acceptTerms")
-            .checked;
+          const acceptedTermsValue =
+            acceptTerms.checked;
 
-        if (verifiedAccessToken) {
           if (!apiKey) {
             status.textContent =
               "Enter your OpenAI API key.";
@@ -242,7 +398,7 @@
             return;
           }
 
-          if (!acceptedTerms) {
+          if (!acceptedTermsValue) {
             status.textContent =
               "You must accept the Terms of Use before continuing.";
 
@@ -251,9 +407,9 @@
 
           try {
             await completeRegistration(
-              email,
+              verifiedEmail,
               apiKey,
-              acceptedTerms,
+              acceptedTermsValue,
               verifiedAccessToken
             );
 
@@ -266,6 +422,17 @@
             status.textContent =
               error.message;
           }
+
+          return;
+        }
+
+        const email =
+          emailInput.value
+            .trim();
+
+        if (!email) {
+          status.textContent =
+            "Enter your email address.";
 
           return;
         }
@@ -317,13 +484,8 @@
             return;
           }
 
-          document.getElementById(
-            "otpSection"
-          ).style.display =
-            "block";
-
           status.textContent =
-            "A verification code has been sent to your email address.";
+            "Check your email and click the sign-in link to continue.";
 
         } catch (error) {
           console.error(
@@ -338,105 +500,23 @@
     );
 
 
-    document
-      .getElementById("verifyOtpButton")
-      .addEventListener(
-        "click",
-        async function () {
-          const email =
-            document
-              .getElementById("emailInput")
-              .value
-              .trim();
+    async function initializePage() {
+      const accessToken =
+        getAccessTokenFromUrl();
 
-          const token =
-            document
-              .getElementById("otpInput")
-              .value
-              .trim();
+      if (accessToken) {
+        await processMagicLinkReturn(
+          accessToken
+        );
 
-          if (!token) {
-            status.textContent =
-              "Enter the verification code sent to your email address.";
+        return;
+      }
 
-            return;
-          }
-
-          status.textContent =
-            "Verifying email address...";
-
-          try {
-            const response =
-              await fetch(
-                API_BASE + "/auth/verify",
-                {
-                  method: "POST",
-
-                  headers: {
-                    "Content-Type":
-                      "application/json"
-                  },
-
-                  credentials: "include",
-
-                  body: JSON.stringify({
-                    email,
-                    token
-                  })
-                }
-              );
-
-            const result =
-              await response.json();
-
-            if (!response.ok) {
-              throw new Error(
-                result.message ||
-                "Verification failed."
-              );
-            }
-
-            verifiedAccessToken =
-              result.accessToken;
-
-            if (result.existingUser) {
-              await completeRegistration(
-                email,
-                "",
-                false,
-                result.accessToken
-              );
-
-              return;
-            }
-
-            document.getElementById(
-              "apiKeySection"
-            ).style.display =
-              "block";
-
-            document.getElementById(
-              "termsSection"
-            ).style.display =
-              "block";
-
-            status.textContent =
-              "New registration. Enter your OpenAI API key and accept the Terms of Use, then click Continue.";
-
-          } catch (error) {
-            console.error(
-              "Email verification failed:",
-              error
-            );
-
-            status.textContent =
-              error.message;
-          }
-        }
-      );
+      await checkSession();
+    }
 
 
-    checkSession();
+    initializePage();
 
   </script>
 
