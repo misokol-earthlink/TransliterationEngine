@@ -519,12 +519,14 @@ app.post(
       const {
         error
       } =
-        await supabaseAuth.auth.signInWithOtp({
-          email,
-          options: {
-            shouldCreateUser: true
-          }
-        });
+       await supabaseAuth.auth.signInWithOtp({
+  email,
+  options: {
+    shouldCreateUser: true,
+    emailRedirectTo:
+      "https://misokol-earthlink.github.io/TransliterationEngine/"
+  }
+});
 
       if (error) {
         throw error;
@@ -546,6 +548,122 @@ app.post(
         success: false,
         message:
           "Unable to send verification code."
+      });
+    }
+  }
+);
+
+// --------------------------------------------------
+// Check Supabase magic-link authentication status
+// --------------------------------------------------
+
+app.post(
+  "/auth/status",
+  async (req, res) => {
+    try {
+      const accessToken =
+        String(
+          req.body.accessToken || ""
+        ).trim();
+
+      if (!accessToken) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message:
+              "Authentication token is required."
+          });
+      }
+
+      const {
+        data,
+        error
+      } =
+        await supabaseAuth.auth.getUser(
+          accessToken
+        );
+
+      if (
+        error ||
+        !data.user
+      ) {
+        return res
+          .status(401)
+          .json({
+            success: false,
+            message:
+              "Unable to verify sign-in."
+          });
+      }
+
+      const email =
+        String(
+          data.user.email || ""
+        )
+          .trim()
+          .toLowerCase();
+
+      if (!email) {
+        return res
+          .status(401)
+          .json({
+            success: false,
+            message:
+              "Verified email address was not returned."
+          });
+      }
+
+      const {
+        data: existingUserRecord,
+        error: existingUserRecordError
+      } =
+        await supabase
+          .from("te_users")
+          .select(
+            "access_allowed"
+          )
+          .eq(
+            "auth_user_id",
+            data.user.id
+          )
+          .maybeSingle();
+
+      if (existingUserRecordError) {
+        throw existingUserRecordError;
+      }
+
+      if (
+        existingUserRecord &&
+        existingUserRecord.access_allowed !== true
+      ) {
+        return res
+          .status(403)
+          .json({
+            success: false,
+            message:
+              "User access has been disabled."
+          });
+      }
+
+      res.json({
+        success: true,
+        email,
+        existingUser:
+          !!existingUserRecord
+      });
+
+    } catch (error) {
+      console.error(
+        "Supabase auth status check failed:"
+      );
+
+      console.error(error);
+
+      res.status(500).json({
+        success: false,
+        message:
+          "Unable to check registration status."
       });
     }
   }
@@ -614,11 +732,47 @@ app.post(
         );
       }
 
-      res.json({
-        success: true,
-        accessToken:
-          data.session.access_token
-      });
+      const {
+  data: existingUserRecord,
+  error: existingUserRecordError
+} =
+  await supabase
+    .from("te_users")
+    .select(
+      "access_allowed"
+    )
+    .eq(
+      "auth_user_id",
+      data.user.id
+    )
+    .maybeSingle();
+
+if (existingUserRecordError) {
+  throw existingUserRecordError;
+}
+
+if (
+  existingUserRecord &&
+  existingUserRecord.access_allowed !== true
+) {
+  return res
+    .status(403)
+    .json({
+      success: false,
+      message:
+        "User access has been disabled."
+    });
+}
+
+res.json({
+  success: true,
+
+  accessToken:
+    data.session.access_token,
+
+  existingUser:
+    !!existingUserRecord
+});
 
     } catch (error) {
       console.error(
@@ -687,19 +841,6 @@ if (!email) {
     });
 }
 
-if (
-  !isTester &&
-  !isDeveloper &&
-  !acceptedTerms
-) {
-  return res
-    .status(400)
-    .json({
-      success: false,
-      message:
-        "You must accept the terms of use before continuing."
-    });
-}
 if (
   !isTester &&
   !isDeveloper &&
@@ -874,6 +1015,15 @@ if (
      * New user:
      * an OpenAI API key is required.
      */
+if (!acceptedTerms) {
+  return res
+    .status(400)
+    .json({
+      success: false,
+      message:
+        "You must accept the terms of use before continuing."
+    });
+}
     if (!apiKey) {
       return res
         .status(400)
