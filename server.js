@@ -5,7 +5,9 @@ const crypto = require("crypto");
 const multer = require("multer");
 const dotenv = require("dotenv");
 const cors = require("cors");
-/*
+const {
+  createClient
+} = require("@supabase/supabase-js");/*
  * Load the original application's .env first.
  * This currently supplies OPENAI_API_KEY.
  */
@@ -19,7 +21,17 @@ const cors = require("cors");
 //dotenv.config({  path: path.join(__dirname, ".env")});
 
 dotenv.config();
-
+const supabase =
+  createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SECRET_KEY,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false
+      }
+    }
+  );
 //const {  transliterateJson} = require("../lib/transliterate");
 
 //const {  processHebrewImage} = require("../lib/imageprocess");
@@ -721,11 +733,13 @@ app.post(
       }
 
       const extractedJson =
-        await processHebrewImage(
-          req.file.buffer,
-          req.file.originalname,
-          req.file.mimetype
-        );
+      const extractedJson =
+  await processHebrewImage(
+    req.file.buffer,
+    req.file.originalname,
+    req.file.mimetype,
+    apiKey
+  );
 
       res.json(
         extractedJson
