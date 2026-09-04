@@ -19,7 +19,7 @@
     <h2>Registration</h2>
 
     <p>
-      Enter your email address and OpenAI API key.
+      Enter your email address to continue.
     </p>
 
     <div>
@@ -33,7 +33,7 @@
 
     <br>
 
-    <div>
+    <div id="apiKeySection" style="display:none;">
       <label for="apiKeyInput">OpenAI API Key</label><br>
       <input
         type="password"
@@ -44,7 +44,7 @@
 
     <br>
 
-    <div id="termsSection">
+    <div id="termsSection" style="display:none;">
 
       <h3>Terms of Use</h3>
 
@@ -124,6 +124,8 @@
       document.getElementById(
         "registerButton"
       );
+
+    let verifiedAccessToken = null;
 
 
     async function checkSession() {
@@ -232,9 +234,38 @@
             .getElementById("acceptTerms")
             .checked;
 
-        if (!acceptedTerms) {
-          status.textContent =
-            "You must accept the Terms of Use before continuing.";
+        if (verifiedAccessToken) {
+          if (!apiKey) {
+            status.textContent =
+              "Enter your OpenAI API key.";
+
+            return;
+          }
+
+          if (!acceptedTerms) {
+            status.textContent =
+              "You must accept the Terms of Use before continuing.";
+
+            return;
+          }
+
+          try {
+            await completeRegistration(
+              email,
+              apiKey,
+              acceptedTerms,
+              verifiedAccessToken
+            );
+
+          } catch (error) {
+            console.error(
+              "Registration failed:",
+              error
+            );
+
+            status.textContent =
+              error.message;
+          }
 
           return;
         }
@@ -278,8 +309,8 @@
 
             await completeRegistration(
               email,
-              apiKey,
-              acceptedTerms,
+              "",
+              false,
               null
             );
 
@@ -317,17 +348,6 @@
               .getElementById("emailInput")
               .value
               .trim();
-
-          const apiKey =
-            document
-              .getElementById("apiKeyInput")
-              .value
-              .trim();
-
-          const acceptedTerms =
-            document
-              .getElementById("acceptTerms")
-              .checked;
 
           const token =
             document
@@ -376,12 +396,32 @@
               );
             }
 
-            await completeRegistration(
-              email,
-              apiKey,
-              acceptedTerms,
-              result.accessToken
-            );
+            verifiedAccessToken =
+              result.accessToken;
+
+            if (result.existingUser) {
+              await completeRegistration(
+                email,
+                "",
+                false,
+                result.accessToken
+              );
+
+              return;
+            }
+
+            document.getElementById(
+              "apiKeySection"
+            ).style.display =
+              "block";
+
+            document.getElementById(
+              "termsSection"
+            ).style.display =
+              "block";
+
+            status.textContent =
+              "New registration. Enter your OpenAI API key and accept the Terms of Use, then click Continue.";
 
           } catch (error) {
             console.error(
