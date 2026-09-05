@@ -4,6 +4,72 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Hebrew Transliteration Engine</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 24px;
+      line-height: 1.45;
+    }
+
+    #registrationSection {
+      max-width: 720px;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: min(520px, 95%);
+      padding: 8px;
+      box-sizing: border-box;
+    }
+
+    button {
+      padding: 8px 14px;
+      cursor: pointer;
+    }
+
+    #termsModal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      overflow: auto;
+    }
+
+    #termsDialog {
+      background: #fff;
+      width: min(900px, 92%);
+      max-height: 88vh;
+      margin: 5vh auto;
+      padding: 24px;
+      box-sizing: border-box;
+      overflow-y: auto;
+      border-radius: 6px;
+    }
+
+    #termsDialog h2 {
+      margin-top: 0;
+    }
+
+    #termsAcceptanceArea {
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid #999;
+    }
+
+    #termsButtons {
+      margin-top: 16px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    #copyrightNotice {
+      margin-top: 24px;
+      font-size: 0.95em;
+    }
+  </style>
 </head>
 
 <body>
@@ -40,32 +106,18 @@
         id="apiKeyInput"
         autocomplete="off"
       >
-    </div>
-
-    <br>
-
-    <div id="termsSection" style="display:none;">
-
-      <h3>Terms of Use</h3>
 
       <p>
-        This is temporary text for testing the
-        user-acceptance process.
-      </p>
-
-      <p>
-        You must accept the terms of use before
-        continuing to the Transliteration Engine.
-      </p>
-
-      <label>
-        <input
-          type="checkbox"
-          id="acceptTerms"
+        A new user must provide a valid OpenAI API key.
+        Account and API-key management is available at
+        <a
+          href="https://platform.openai.com/"
+          target="_blank"
+          rel="noopener noreferrer"
         >
-        I accept the Terms of Use.
-      </label>
-
+          OpenAI Platform
+        </a>.
+      </p>
     </div>
 
     <br>
@@ -78,6 +130,167 @@
     </button>
 
   </div>
+
+
+  <div
+    id="termsModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="termsTitle"
+  >
+    <div id="termsDialog">
+
+      <h2 id="termsTitle">
+        Terms and Conditions
+      </h2>
+
+      <p>
+        The Transliteration Engine (“TE”) is a cloud-based application
+        developed and provided by Malcolm Sokol, doing business as
+        I_Sokie Enterprises (the “Developer”). The User is granted a
+        limited, conditional, non-transferable license to access and use
+        TE, subject to acceptance of these Terms and Conditions during
+        the registration process.
+      </p>
+
+      <p>
+        <strong>1. User Identification.</strong>
+        The User must provide a valid and verifiable email address,
+        which will serve as the User's registered User ID and may be
+        used to authenticate subsequent access to TE.
+      </p>
+
+      <p>
+        <strong>2. OpenAI API Account.</strong>
+        The User must provide a valid OpenAI API key associated with an
+        OpenAI account having sufficient credits or other authorization
+        to make the API calls required by TE. Charges associated with
+        the User's OpenAI account and API usage are the responsibility
+        of the User.
+      </p>
+
+      <p>
+        <strong>3. Submitted Images and Copyright.</strong>
+        A User utilizing TE's Optical Character Recognition (“OCR”)
+        features represents that the User is legally permitted to submit
+        and process the images or other materials provided to TE and
+        that doing so does not violate applicable copyright or other
+        intellectual-property rights.
+      </p>
+
+      <p>
+        <strong>4. Accuracy of Results.</strong>
+        The User understands that neither the OCR features nor the
+        transliteration features of TE are guaranteed to produce
+        error-free results. No representation or warranty is made that
+        OCR, Hebrew text recognition, transliteration, or other
+        processing results will be complete or free from errors. Users
+        are responsible for reviewing generated results before relying
+        upon or distributing them.
+      </p>
+
+      <p>
+        <strong>5. Access to TE.</strong>
+        Access to TE may be suspended, blocked, or revoked by the
+        Developer at any time, with or without prior notice.
+      </p>
+
+      <p>
+        <strong>6. Electronic Communications.</strong>
+        The User understands that registration, authentication, account
+        administration, and subsequent access to TE may require
+        communication through the email address supplied as the User ID.
+        Delivery of such communications may be affected by limitations
+        or policies imposed by the User's email provider or other
+        third-party service providers.
+      </p>
+
+      <p>
+        <strong>7. Administrative Communications.</strong>
+        By registering, the User agrees that the Developer may send
+        email communications reasonably related to TE, including
+        authentication messages, notices concerning the User's
+        registration or access, service-status information, and
+        information concerning updates or changes to TE.
+      </p>
+
+      <p>
+        <strong>8. Intellectual Property.</strong>
+        All rights, title, and interest in TE's original software,
+        source code, application design, processing logic,
+        documentation, and other original materials remain with the
+        Developer. Registration grants the User only a limited,
+        conditional, non-transferable right to access and use TE. No
+        ownership interest or right to copy, modify, distribute,
+        sublicense, reverse engineer, or otherwise exploit TE or its
+        underlying code is granted to the User.
+      </p>
+
+      <p>
+        <strong>9. Third-Party Services and Materials.</strong>
+        TE utilizes or interacts with third-party services and may be
+        guided by third-party standards, publications, or other
+        materials. Nothing in these Terms claims ownership by the
+        Developer of such third-party services, standards,
+        publications, or materials. All rights in third-party
+        materials remain with their respective owners.
+      </p>
+
+      <p>
+        <strong>10. Limitation of Liability.</strong>
+        TE is provided on an “as-is” and “as-available” basis. To the
+        extent permitted by applicable law, the Developer shall not be
+        liable for consequential, incidental, indirect, or similar
+        damages, including loss or corruption of data, arising from the
+        use of or inability to use TE. The User is responsible for
+        maintaining appropriate copies or backups of material submitted
+        to or generated through TE.
+      </p>
+
+      <p>
+        <strong>11. Acceptance.</strong>
+        By completing registration and indicating acceptance of these
+        Terms and Conditions, the User acknowledges having read and
+        agreed to these Terms and Conditions.
+      </p>
+
+      <div id="termsAcceptanceArea">
+
+        <label>
+          <input
+            type="checkbox"
+            id="acceptTerms"
+          >
+          I have read and accept the Terms and Conditions.
+        </label>
+
+        <div id="termsButtons">
+          <button
+            type="button"
+            id="acceptTermsButton"
+            disabled
+          >
+            Accept and Continue
+          </button>
+
+          <button
+            type="button"
+            id="cancelTermsButton"
+          >
+            Cancel
+          </button>
+        </div>
+
+        <div id="copyrightNotice">
+          Copyright © 2026 Malcolm Sokol, doing business as
+          I_Sokie Enterprises. All rights reserved.
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
 
   <script>
 
@@ -97,11 +310,6 @@
         "registrationInstructions"
       );
 
-    const emailSection =
-      document.getElementById(
-        "emailSection"
-      );
-
     const emailInput =
       document.getElementById(
         "emailInput"
@@ -117,9 +325,14 @@
         "apiKeyInput"
       );
 
-    const termsSection =
+    const registerButton =
       document.getElementById(
-        "termsSection"
+        "registerButton"
+      );
+
+    const termsModal =
+      document.getElementById(
+        "termsModal"
       );
 
     const acceptTerms =
@@ -127,9 +340,14 @@
         "acceptTerms"
       );
 
-    const registerButton =
+    const acceptTermsButton =
       document.getElementById(
-        "registerButton"
+        "acceptTermsButton"
+      );
+
+    const cancelTermsButton =
+      document.getElementById(
+        "cancelTermsButton"
       );
 
     let verifiedAccessToken = null;
@@ -170,6 +388,30 @@
         params.get("access_token") ||
         null
       );
+    }
+
+
+    function openTermsModal() {
+      acceptTerms.checked =
+        false;
+
+      acceptTermsButton.disabled =
+        true;
+
+      termsModal.style.display =
+        "block";
+    }
+
+
+    function closeTermsModal() {
+      termsModal.style.display =
+        "none";
+
+      acceptTerms.checked =
+        false;
+
+      acceptTermsButton.disabled =
+        true;
     }
 
 
@@ -336,23 +578,20 @@
         emailInput.readOnly =
           true;
 
-        emailSection.style.display =
-          "block";
-
         apiKeySection.style.display =
-          "block";
-
-        termsSection.style.display =
           "block";
 
         registrationSection.style.display =
           "block";
 
         registrationInstructions.textContent =
-          "New registration. Enter your OpenAI API key and accept the Terms of Use.";
+          "Email verified. Enter your OpenAI API key, then review and accept the Terms and Conditions.";
+
+        registerButton.textContent =
+          "Review Terms and Register";
 
         status.textContent =
-          "Email verified.";
+          "New user registration.";
 
       } catch (error) {
         console.error(
@@ -388,40 +627,14 @@
           const apiKey =
             apiKeyInput.value.trim();
 
-          const acceptedTermsValue =
-            acceptTerms.checked;
-
           if (!apiKey) {
             status.textContent =
-              "Enter your OpenAI API key.";
+              "Enter your OpenAI API key before reviewing the Terms and Conditions.";
 
             return;
           }
 
-          if (!acceptedTermsValue) {
-            status.textContent =
-              "You must accept the Terms of Use before continuing.";
-
-            return;
-          }
-
-          try {
-            await completeRegistration(
-              verifiedEmail,
-              apiKey,
-              acceptedTermsValue,
-              verifiedAccessToken
-            );
-
-          } catch (error) {
-            console.error(
-              "Registration failed:",
-              error
-            );
-
-            status.textContent =
-              error.message;
-          }
+          openTermsModal();
 
           return;
         }
@@ -496,6 +709,76 @@
           status.textContent =
             error.message;
         }
+      }
+    );
+
+
+    acceptTerms.addEventListener(
+      "change",
+      function () {
+        acceptTermsButton.disabled =
+          !acceptTerms.checked;
+      }
+    );
+
+
+    acceptTermsButton.addEventListener(
+      "click",
+      async function () {
+
+        if (!acceptTerms.checked) {
+          return;
+        }
+
+        const apiKey =
+          apiKeyInput.value.trim();
+
+        if (!apiKey) {
+          closeTermsModal();
+
+          status.textContent =
+            "Enter your OpenAI API key.";
+
+          return;
+        }
+
+        acceptTermsButton.disabled =
+          true;
+
+        status.textContent =
+          "Completing registration...";
+
+        try {
+          await completeRegistration(
+            verifiedEmail,
+            apiKey,
+            true,
+            verifiedAccessToken
+          );
+
+        } catch (error) {
+          console.error(
+            "Registration failed:",
+            error
+          );
+
+          status.textContent =
+            error.message;
+
+          acceptTermsButton.disabled =
+            false;
+        }
+      }
+    );
+
+
+    cancelTermsButton.addEventListener(
+      "click",
+      function () {
+        closeTermsModal();
+
+        status.textContent =
+          "Registration was not completed because the Terms and Conditions were not accepted.";
       }
     );
 
