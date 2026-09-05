@@ -91,7 +91,27 @@
 #adminChoiceDialog button {
   margin: 8px;
 }
+#adminModeModal {
+  display: none;
+  position: fixed;
+  z-index: 1100;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
 
+#adminModeDialog {
+  background: #fff;
+  width: min(520px, 90%);
+  margin: 15vh auto;
+  padding: 24px;
+  box-sizing: border-box;
+  border-radius: 6px;
+  text-align: center;
+}
+
+#adminModeDialog button {
+  margin: 8px;
+}
   </style>
 </head>
 
@@ -189,7 +209,33 @@
 
     </div>
   </div>
+<!-- Administrator mode modal -->
+<div
+  id="adminModeModal"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="adminModeTitle"
+  style="display:none;"
+>
+  <div id="adminModeDialog">
 
+    <h2 id="adminModeTitle">
+      Administrator Mode
+    </h2>
+
+    <p>
+      Administrative functions will be added here.
+    </p>
+
+    <button
+      type="button"
+      id="adminContinueToTeButton"
+    >
+      Continue to TE Processing
+    </button>
+
+  </div>
+</div>
 
   <!-- Terms and Conditions modal -->
 
@@ -411,6 +457,30 @@
       document.getElementById(
         "cancelTermsButton"
       );
+const adminChoiceModal =
+  document.getElementById(
+    "adminChoiceModal"
+  );
+
+const enterAdminButton =
+  document.getElementById(
+    "enterAdminButton"
+  );
+
+const proceedToTeButton =
+  document.getElementById(
+    "proceedToTeButton"
+  );
+const adminModeModal =
+  document.getElementById(
+    "adminModeModal"
+  );
+
+const adminContinueToTeButton =
+  document.getElementById(
+    "adminContinueToTeButton"
+  );
+
 
     let verifiedAccessToken = null;
     let verifiedEmail = null;
@@ -476,6 +546,42 @@
         true;
     }
 
+function showAdminChoice() {
+  adminChoiceModal.style.display =
+    "block";
+
+  registrationSection.style.display =
+    "none";
+}
+proceedToTeButton.addEventListener(
+  "click",
+  function () {
+    window.location.href =
+      "TransliterationEngine.html";
+  }
+);
+
+enterAdminButton.addEventListener(
+  "click",
+  function () {
+    adminChoiceModal.style.display =
+      "none";
+
+    adminModeModal.style.display =
+      "block";
+
+    status.textContent =
+      "Administrator Mode";
+  }
+);
+
+adminContinueToTeButton.addEventListener(
+  "click",
+  function () {
+    window.location.href =
+      "TransliterationEngine.html";
+  }
+);
 
     async function checkSession() {
       try {
@@ -491,15 +597,24 @@
         const result =
           await response.json();
 
-        if (result.authenticated) {
-          status.textContent =
-            "Registration found. Opening application...";
+       if (result.authenticated) {
+  if (result.developer) {
+    status.textContent =
+      "Developer session found.";
 
-          window.location.href =
-            "TransliterationEngine.html";
+    showAdminChoice();
 
-          return true;
-        }
+    return true;
+  }
+
+  status.textContent =
+    "Registration found. Opening application...";
+
+  window.location.href =
+    "TransliterationEngine.html";
+
+  return true;
+}
 
       } catch (error) {
         console.error(
@@ -558,11 +673,21 @@
         );
       }
 
-      status.textContent =
-        "Registration successful. Opening application...";
+     if (result.developer) {
+  status.textContent =
+    "Developer registration found.";
 
-      window.location.href =
-        "TransliterationEngine.html";
+  showAdminChoice();
+
+  return;
+}
+
+status.textContent =
+  "Registration successful. Opening application...";
+
+window.location.href =
+  "TransliterationEngine.html";
+
     }
 
 
