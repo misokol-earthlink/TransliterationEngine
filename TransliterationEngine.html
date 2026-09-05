@@ -16,15 +16,31 @@ h1 {
 .title-row {
     display: flex;
     align-items: center;
-    gap: 200px;
 }
 
 .title-row h1 {
-    margin: 0;
+    margin-right: 200px;
 }
 
 #logoutButton {
     margin-top: 0;
+}
+
+#developerLogo {
+    width: 145px;
+    height: auto;
+    margin-left: 160px;
+}
+
+#aboutButton,
+#termsButton {
+    margin-top: 0;
+    margin-left: 10px;
+    padding: 6px 10px;
+}
+
+.title-row h1 {
+    margin: 0;
 }
 #status {
     margin-top: 20px;
@@ -292,8 +308,27 @@ color: royalblue;
     type="button">
     Logout / Switch User
   </button>
-</div>
 
+  <img
+    id="developerLogo"
+    src="ISokieLogo_Clear.png"
+    alt="I_Sokie Enterprises"
+  >
+
+  <button
+    id="aboutButton"
+    type="button"
+    title="About">
+    ⓘ
+  </button>
+
+  <button
+    id="termsButton"
+    type="button"
+    title="Terms and Conditions">
+    T&amp;C
+  </button>
+</div>
 <p>Select a Lyrics JSON file.</p>
 
 <input    type="file"
