@@ -69,6 +69,29 @@
       margin-top: 24px;
       font-size: 0.95em;
     }
+
+#adminChoiceModal {
+  display: none;
+  position: fixed;
+  z-index: 1100;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+#adminChoiceDialog {
+  background: #fff;
+  width: min(520px, 90%);
+  margin: 15vh auto;
+  padding: 24px;
+  box-sizing: border-box;
+  border-radius: 6px;
+  text-align: center;
+}
+
+#adminChoiceDialog button {
+  margin: 8px;
+}
+
   </style>
 </head>
 
@@ -129,7 +152,46 @@
       Continue
     </button>
 
+    </div>
+
+
+  <!-- Administrator choice modal -->
+  <div
+    id="adminChoiceModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="adminChoiceTitle"
+    style="display:none;"
+  >
+    <div id="adminChoiceDialog">
+
+      <h2 id="adminChoiceTitle">
+        Administrator Access
+      </h2>
+
+      <p>
+        Choose how you would like to continue.
+      </p>
+
+      <button
+        type="button"
+        id="enterAdminButton"
+      >
+        Enter Admin Mode
+      </button>
+
+      <button
+        type="button"
+        id="proceedToTeButton"
+      >
+        Proceed to TE Processing
+      </button>
+
+    </div>
   </div>
+
+
+  <!-- Terms and Conditions modal -->
 
 
   <div
