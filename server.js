@@ -407,10 +407,23 @@ app.get(
       });
     }
 
-    res.json({
-      authenticated: true,
-      email: session.email
-    });
+   const isDeveloper =
+  String(
+    session.email || ""
+  )
+    .trim()
+    .toLowerCase() ===
+  String(
+    process.env.DEVELOPER_USER || ""
+  )
+    .trim()
+    .toLowerCase();
+
+res.json({
+  authenticated: true,
+  email: session.email,
+  developer: isDeveloper
+});
   }
 );
 
@@ -1175,10 +1188,11 @@ if (
       email
     );
 
-    res.json({
-      success: true,
-      email
-    });
+   res.json({
+  success: true,
+  email,
+  developer: isDeveloper
+});
   }
 );
 
