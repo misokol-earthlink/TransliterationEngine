@@ -37,10 +37,10 @@ h1 {
     margin-top: 0;
     margin-left: 60px;
     padding: 6px 10px;
-}
+
 #termsButton {
     margin-top: 0;
-    margin-left: 45px;
+    margin-left: 30px;
     padding: 6px 10px;
 }
 #status {
@@ -296,7 +296,43 @@ color: royalblue;
   gap: 8px;
 
   text-align: center;
-}</style>
+}
+#legalModalOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 12000;
+  align-items: center;
+  justify-content: center;
+}
+
+#legalModal {
+  width: min(900px, 92vw);
+  max-height: 88vh;
+  background: white;
+  border: 2px solid #666;
+  border-radius: 8px;
+  padding: 24px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+}
+
+#legalModalContent {
+  line-height: 1.5;
+}
+
+#legalModalButtons {
+  margin-top: 24px;
+  text-align: center;
+}
+
+#legalModalCloseButton {
+  margin-top: 0;
+}
+
+</style>
 </head>
 
 <body>
@@ -779,5 +815,91 @@ color: royalblue;
 
   </div>
 </div>
+
+<!-- About / Terms informational modal -->
+<div id="legalModalOverlay">
+  <div
+    id="legalModal"
+    role="dialog"
+    aria-modal="true"
+  >
+    <div id="legalModalContent"></div>
+
+    <div id="legalModalButtons">
+      <button
+        id="legalModalCloseButton"
+        type="button">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const legalModalOverlay =
+    document.getElementById("legalModalOverlay");
+
+  const legalModalContent =
+    document.getElementById("legalModalContent");
+
+  const legalModalCloseButton =
+    document.getElementById("legalModalCloseButton");
+
+  async function openLegalModal(fileName) {
+    try {
+      legalModalContent.innerHTML =
+        "<p>Loading...</p>";
+
+      legalModalOverlay.style.display =
+        "flex";
+
+      const response =
+        await fetch(fileName, { cache: "no-store" });
+
+      if (!response.ok) {
+        throw new Error("Unable to load information.");
+      }
+
+      const content = await response.text();
+      legalModalContent.innerHTML = content;
+
+    } catch (error) {
+      console.error(
+        "Legal information load failed:",
+        error
+      );
+
+      legalModalContent.innerHTML =
+        "<p>Unable to load this information.</p>";
+    }
+  }
+
+  document
+    .getElementById("aboutButton")
+    .addEventListener(
+      "click",
+      function () {
+        openLegalModal("about-content.txt");
+      }
+    );
+
+  document
+    .getElementById("termsButton")
+    .addEventListener(
+      "click",
+      function () {
+        openLegalModal("terms-content.txt");
+      }
+    );
+
+  legalModalCloseButton.addEventListener(
+    "click",
+    function () {
+      legalModalOverlay.style.display = "none";
+      legalModalContent.innerHTML = "";
+    }
+  );
+</script>
+
 </body>
 </html>
