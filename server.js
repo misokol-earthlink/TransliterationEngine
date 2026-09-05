@@ -528,7 +528,13 @@ app.post(
           bypass: true
         });
       }
-
+console.log(
+  "OTP SEND REQUEST:",
+  {
+    time: new Date().toISOString(),
+    email: email
+  }
+);
       const {
         error
       } =
