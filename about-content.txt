@@ -1,0 +1,27 @@
+<div class="legal-content about-content">
+
+  <h2>About the Transliteration Engine</h2>
+
+  <p>
+    The Transliteration Engine (“TE”) is independently developed and provided by Malcolm Sokol, doing business as I_Sokie Enterprises.
+  </p>
+
+  <h3>Transliteration Standards and Sources</h3>
+
+  <p>
+    TE is guided in part by the <em>URJ Transliteration Style Guide</em>. The Style Guide and its content remain the property of their respective rights holder(s).
+  </p>
+
+  <p>
+    TE may also utilize or interact with third-party services, standards, publications, source texts, and other materials. All rights in third-party materials remain with their respective owners.
+  </p>
+
+  <p>
+    TE is independently developed by I_Sokie Enterprises and is not affiliated with or endorsed by the Union for Reform Judaism.
+  </p>
+
+  <p class="copyright-notice">
+    Copyright © 2026 Malcolm Sokol, doing business as I_Sokie Enterprises. All rights reserved.
+  </p>
+
+</div>
