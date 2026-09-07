@@ -59,6 +59,7 @@ const app = express();
 
 const port =
   process.env.PORT || 3000;
+/*
 app.use(
   cors({
     origin:
@@ -66,6 +67,21 @@ app.use(
     credentials: true
   })
 );
+*/
+
+app.use(
+  cors({
+    origin: [
+      "https://misokol-earthlink.github.io",
+      "http://trans.isokie.com",
+      "https://trans.isokie.com"
+    ],
+    credentials: true
+  })
+);
+
+
+
 
 /*
  * File upload configuration.
