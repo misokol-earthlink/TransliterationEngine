@@ -559,7 +559,7 @@ console.log(
   options: {
     shouldCreateUser: true,
     emailRedirectTo:
-      "https://misokol-earthlink.github.io/TransliterationEngine/"
+  "https://trans.isokie.com/"
   }
 });
 
