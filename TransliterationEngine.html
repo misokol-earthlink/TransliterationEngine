@@ -331,12 +331,34 @@ color: royalblue;
 #legalModalCloseButton {
   margin-top: 0;
 }
+#splash-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
 
+    background-color: #111111;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 99999;
+}
+
+.splash-title {
+    font-family: "Lucida Calligraphy", cursive;
+    font-weight: bold;
+    color: darkred;
+    text-align: center;
+}
 </style>
 </head>
 
 <body>
-
+<div id="main-translate-dom">
 <div class="title-row">
   <h1>Hebrew Transliteration Engine</h1>
 
@@ -846,6 +868,13 @@ color: royalblue;
 </div>
 
 <script>
+window.addEventListener("load", () => {
+    const splash = document.getElementById("splash-screen");
+
+    setTimeout(() => {
+        splash.style.display = "none";
+    }, 5000);
+});
   const legalModalOverlay =
     document.getElementById("legalModalOverlay");
 
@@ -910,6 +939,15 @@ color: royalblue;
     }
   );
 </script>
+</div>
+<div id="splash-screen" >
 
+    <h2 class="splash-title">
+        From the workshop of I_Sokie Enterprises
+    </h2>
+
+    <img src="ISokieButton.svg" alt="I_Sokie Enterprises">
+
+</div>
 </body>
 </html>
