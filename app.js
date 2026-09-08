@@ -1260,12 +1260,14 @@ async function loadReviewFile() {
 function isReviewBaseCharacter(character) {
   return (
     /[\u05D0-\u05EA]/.test(character) ||
+    character === "\u05BE" || // Maqaf
     character === "\uFB2A" || // Shin with Shin Dot
     character === "\uFB2B" || // Shin with Sin Dot
     character === "\uFB35" || // Shuruk
     character === "\uFB4B"    // Holam Male
   );
 }
+
 function parseReviewGraphemes(hebrewText) {
   const graphemes = [];
   let currentGrapheme = null;
@@ -2327,9 +2329,19 @@ function addReviewVowelOrSymbol() {
   const baseGrapheme =
     graphemes[baseIndex];
 
-  if (!baseGrapheme) {
+if (!baseGrapheme) {
     return;
   }
+
+if (baseGrapheme.base === "\u05BE") {
+  alert(
+    "A vowel or symbol cannot be added to a Maqaf."
+  );
+  return;
+}
+
+
+  
 
   const elements =
     getReviewReplacementElements();
@@ -2742,6 +2754,12 @@ function addReviewTrope() {
   if (!grapheme) {
     return;
   }
+if (grapheme.base === "\u05BE") {
+  alert(
+    "Trope cannot be added to a Maqaf."
+  );
+  return;
+}
 
   const tropeElements =
     getReviewTropeElements();
@@ -3423,14 +3441,16 @@ function getReviewBaseLetterElements() {
     { name: "Final Tsadi", base: "\u05E5", final: true, normalBase: "\u05E6" },
     { name: "Qof", base: "\u05E7" },
     { name: "Resh", base: "\u05E8" },
-
     // Plain U+05E9 Shin is intentionally excluded.
     { name: "Shin", base: "\uFB2A" },
     { name: "Sin", base: "\uFB2B" },
-
-    { name: "Tav", base: "\u05EA" }
+    { name: "Tav", base: "\u05EA" },
+    {  name: "Maqaf",  base: "\u05BE",  structural: true}
   ];
 }
+
+
+
 function getReviewTropeElements() {
   return [
     {
@@ -3721,13 +3741,24 @@ function populateReviewNewElementOptions() {
   if (!baseGrapheme) {
     return;
   }
+const elementTypeSelect =
+    document.getElementById("reviewElementType");
 
+
+/*
+ * Maqaf is a structural base-level character.
+ * It cannot receive vowels or trope.
+ */
+if (
+  baseGrapheme.base === "\u05BE" &&
+  elementTypeSelect.value !== "base"
+) {
+  return;
+}
   const previewBase =
     baseGrapheme.base;
 
-  const elementTypeSelect =
-    document.getElementById("reviewElementType");
-
+  
   let elements;
 
 if (elementTypeSelect.value === "base") {
@@ -3899,7 +3930,12 @@ function replaceReviewBaseLetter() {
   if (!selectedGrapheme) {
     return;
   }
-
+if (selectedGrapheme.base === "\u05BE") {
+  alert(
+    "Maqaf may be added or removed, but not replaced."
+  );
+  return;
+}
   const baseLetters =
     getReviewBaseLetterElements();
 
@@ -3911,6 +3947,12 @@ function replaceReviewBaseLetter() {
   if (!replacement) {
     return;
   }
+if (replacement.base === "\u05BE") {
+  alert(
+    "Use Add to insert a Maqaf."
+  );
+  return;
+}
 
   /*
     If replacing with a final form,
@@ -4227,7 +4269,12 @@ function addReviewMeteg() {
   if (!grapheme) {
     return;
   }
-
+if (grapheme.base === "\u05BE") {
+  alert(
+    "Meteg/Silluq cannot be added to a Maqaf."
+  );
+  return;
+}
   /*
    * Do not add a duplicate Meteg/Silluq
    * to the same selected base.
