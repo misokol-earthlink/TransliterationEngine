@@ -176,8 +176,11 @@
         autocomplete="off"
       >
 
-      <p>
+           <p>
         A new user must provide a valid OpenAI API key.
+        A returning user may leave this field blank to
+        continue using the currently stored API key, or
+        enter a new API key to replace the stored key.
         Account and API-key management is available at
         <a
           href="https://platform.openai.com/"
@@ -567,9 +570,10 @@ const developerCodeCancelButton =
     "developerCodeCancelButton"
   );
 
-    let verifiedAccessToken = null;
+       let verifiedAccessToken = null;
     let verifiedEmail = null;
     let newUserRegistration = false;
+    let existingUserRegistration = false;
 let pendingDeveloperEmail = null;
 let pendingDeveloperCode = null;
 
@@ -781,12 +785,26 @@ if (result.developer) {
 
   return;
 }
+if (result.apiKeyUpdated) {
+  status.textContent =
+    "Your OpenAI API key has been updated. Opening application...";
+
+  setTimeout(
+    function () {
+      window.location.href =
+        "TransliterationEngine.html";
+    },
+    2000
+  );
+
+  return;
+}
+
 status.textContent =
   "Registration successful. Opening application...";
 
 window.location.href =
   "TransliterationEngine.html";
-
     }
 
 
@@ -844,13 +862,36 @@ window.location.href =
           );
         }
 
-        if (result.existingUser) {
-          await completeRegistration(
-            verifiedEmail,
-            "",
-            false,
-            verifiedAccessToken
-          );
+              if (result.existingUser) {
+          newUserRegistration =
+            false;
+
+          existingUserRegistration =
+            true;
+
+          emailInput.value =
+            verifiedEmail;
+
+          emailInput.readOnly =
+            true;
+
+          apiKeyInput.value =
+            "";
+
+          apiKeySection.style.display =
+            "block";
+
+          registrationSection.style.display =
+            "block";
+
+          registrationInstructions.textContent =
+            "Email verified. Leave the OpenAI API key blank to continue using your stored key, or enter a new API key to replace it.";
+
+          registerButton.textContent =
+            "Continue";
+
+          status.textContent =
+            "Returning user sign-in.";
 
           return;
         }
@@ -893,7 +934,10 @@ window.location.href =
         verifiedEmail =
           null;
 
-        newUserRegistration =
+               newUserRegistration =
+          false;
+
+        existingUserRegistration =
           false;
 
         status.textContent =
@@ -909,7 +953,7 @@ window.location.href =
       "click",
       async function () {
 
-        if (newUserRegistration) {
+              if (newUserRegistration) {
           const apiKey =
             apiKeyInput.value.trim();
 
@@ -925,10 +969,45 @@ window.location.href =
           return;
         }
 
+        if (existingUserRegistration) {
+          const apiKey =
+            apiKeyInput.value.trim();
+
+          registerButton.disabled =
+            true;
+
+          status.textContent =
+            apiKey
+              ? "Updating API key and completing sign-in..."
+              : "Completing sign-in...";
+
+          try {
+            await completeRegistration(
+              verifiedEmail,
+              apiKey,
+              false,
+              verifiedAccessToken
+            );
+
+          } catch (error) {
+            console.error(
+              "Returning user sign-in failed:",
+              error
+            );
+
+            status.textContent =
+              error.message;
+
+            registerButton.disabled =
+              false;
+          }
+
+          return;
+        }
+
         const email =
           emailInput.value
             .trim();
-
         if (!email) {
           status.textContent =
             "Enter your email address.";

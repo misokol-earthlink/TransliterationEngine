@@ -996,7 +996,7 @@ if (
   }
 }
 let openaiSecretId = null;
-
+let apiKeyUpdated = false;
 if (
   !isTester &&
   !isDeveloper
@@ -1064,45 +1064,103 @@ if (
     }
 
     openaiSecretId =
-      existingSupabaseUser.openai_secret_id;
+  existingSupabaseUser.openai_secret_id;
 
-    const now =
-      new Date().toISOString();
+/*
+ * Existing user supplied a new API key:
+ * store it as a new Vault secret and make
+ * that secret the user's active key.
+ *
+ * A blank API-key field leaves the current
+ * stored key unchanged.
+ */
+if (apiKey) {
+  const {
+    data: replacementSecretId,
+    error: replacementSecretError
+  } =
+    await supabase.rpc(
+      "store_openai_secret",
+      {
+        secret_value:
+          apiKey,
 
-    const {
-      error: updateError
-    } =
-      await supabase
-        .from("te_users")
-        .update({
-          terms_accepted_at:
-            now,
+        secret_name:
+          "openai-" +
+          authUser.id +
+          "-" +
+          Date.now()
+      }
+    );
 
-          updated_at:
-            now
-        })
-        .eq(
-          "auth_user_id",
-          authUser.id
-        );
+  if (
+    replacementSecretError ||
+    !replacementSecretId
+  ) {
+    console.error(
+      "Replacement OpenAI key storage failed:"
+    );
 
-    if (updateError) {
-      console.error(
-        "TEUsers update failed:"
-      );
+    console.error(
+      replacementSecretError
+    );
 
-      console.error(
-        updateError
-      );
+    return res
+      .status(500)
+      .json({
+        success: false,
+        message:
+          "Unable to securely update the OpenAI API key."
+      });
+  }
 
-      return res
-        .status(500)
-        .json({
-          success: false,
-          message:
-            "Unable to update user registration."
-        });
-    }
+  openaiSecretId =
+    replacementSecretId;
+
+  apiKeyUpdated =
+    true;
+}
+
+const now =
+  new Date().toISOString();
+
+const {
+  error: updateError
+} =
+  await supabase
+    .from("te_users")
+    .update({
+      openai_secret_id:
+        openaiSecretId,
+
+      terms_accepted_at:
+        now,
+
+      updated_at:
+        now
+    })
+    .eq(
+      "auth_user_id",
+      authUser.id
+    );
+
+if (updateError) {
+  console.error(
+    "TEUsers update failed:"
+  );
+
+  console.error(
+    updateError
+  );
+
+  return res
+    .status(500)
+    .json({
+      success: false,
+      message:
+        "Unable to update user registration."
+    });
+}
 
   } else {
     /*
@@ -1269,10 +1327,11 @@ if (
       email
     );
 
-   res.json({
+    res.json({
   success: true,
   email,
-  developer: isDeveloper
+  developer: isDeveloper,
+  apiKeyUpdated
 });
   }
 );
