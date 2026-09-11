@@ -112,6 +112,32 @@
 #adminModeDialog button {
   margin: 8px;
 }
+
+#developerCodeModal {
+  display: none;
+  position: fixed;
+  z-index: 1150;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+#developerCodeDialog {
+  background: #fff;
+  width: min(420px, 90%);
+  margin: 18vh auto;
+  padding: 24px;
+  box-sizing: border-box;
+  border-radius: 6px;
+  text-align: center;
+}
+
+#developerCodeDialog input {
+  width: min(300px, 95%);
+}
+
+#developerCodeDialog button {
+  margin: 8px;
+}
   </style>
 </head>
 
@@ -236,7 +262,48 @@
 
   </div>
 </div>
+<!-- Developer verification modal -->
+<div
+  id="developerCodeModal"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="developerCodeTitle"
+  style="display:none;"
+>
+  <div id="developerCodeDialog">
 
+    <h2 id="developerCodeTitle">
+      Developer Verification
+    </h2>
+
+    <p>
+      Enter the developer security code.
+    </p>
+
+    <input
+      type="password"
+      id="developerCodeInput"
+      autocomplete="off"
+    >
+
+    <br><br>
+
+    <button
+      type="button"
+      id="developerCodeContinueButton"
+    >
+      Continue
+    </button>
+
+    <button
+      type="button"
+      id="developerCodeCancelButton"
+    >
+      Cancel
+    </button>
+
+  </div>
+</div>
   <!-- Terms and Conditions modal -->
 
 
@@ -480,12 +547,31 @@ const adminContinueToTeButton =
   document.getElementById(
     "adminContinueToTeButton"
   );
+const developerCodeModal =
+  document.getElementById(
+    "developerCodeModal"
+  );
 
+const developerCodeInput =
+  document.getElementById(
+    "developerCodeInput"
+  );
+
+const developerCodeContinueButton =
+  document.getElementById(
+    "developerCodeContinueButton"
+  );
+
+const developerCodeCancelButton =
+  document.getElementById(
+    "developerCodeCancelButton"
+  );
 
     let verifiedAccessToken = null;
     let verifiedEmail = null;
     let newUserRegistration = false;
-
+let pendingDeveloperEmail = null;
+let pendingDeveloperCode = null;
 
     function clearAuthFragment() {
       if (!window.location.hash) {
@@ -637,7 +723,8 @@ adminContinueToTeButton.addEventListener(
       email,
       apiKey,
       acceptedTermsValue,
-      accessToken
+      accessToken,
+      developerCode = null
     ) {
       const response =
         await fetch(
@@ -652,12 +739,13 @@ adminContinueToTeButton.addEventListener(
 
             credentials: "include",
 
-            body: JSON.stringify({
+           body: JSON.stringify({
               email,
               apiKey,
               acceptedTerms:
                 acceptedTermsValue,
-              accessToken
+              accessToken,
+              developerCode
             })
           }
         );
@@ -870,20 +958,38 @@ window.location.href =
             );
           }
 
-          if (result.bypass) {
-            status.textContent =
-              "Continuing...";
+         if (result.bypass) {
 
-            await completeRegistration(
-              email,
-              "",
-              false,
-              null
-            );
+  if (result.developer) {
+    pendingDeveloperEmail =
+      email;
 
-            return;
-          }
+    developerCodeInput.value =
+      "";
 
+    developerCodeModal.style.display =
+      "block";
+
+    developerCodeInput.focus();
+
+    status.textContent =
+      "Developer verification required.";
+
+    return;
+  }
+
+  status.textContent =
+    "Continuing...";
+
+  await completeRegistration(
+    email,
+    "",
+    false,
+    null
+  );
+
+  return;
+}
           status.textContent =
             "Check your email and click the sign-in link to continue.";
 
@@ -899,7 +1005,90 @@ window.location.href =
       }
     );
 
+developerCodeContinueButton.addEventListener(
+  "click",
+  async function () {
 
+    const developerCode =
+      developerCodeInput.value.trim();
+
+    if (!developerCode) {
+      status.textContent =
+        "Enter the developer security code.";
+
+      return;
+    }
+
+    if (!pendingDeveloperEmail) {
+      developerCodeModal.style.display =
+        "none";
+
+      status.textContent =
+        "Developer verification could not be completed.";
+
+      return;
+    }
+
+    developerCodeContinueButton.disabled =
+      true;
+
+    status.textContent =
+      "Verifying developer access...";
+
+    try {
+      pendingDeveloperCode =
+        developerCode;
+
+      await completeRegistration(
+        pendingDeveloperEmail,
+        "",
+        false,
+        null,
+        pendingDeveloperCode
+      );
+
+    } catch (error) {
+      console.error(
+        "Developer verification failed:",
+        error
+      );
+
+      status.textContent =
+        error.message;
+
+      developerCodeInput.value =
+        "";
+
+      developerCodeInput.focus();
+
+    } finally {
+      developerCodeContinueButton.disabled =
+        false;
+    }
+  }
+);
+
+
+developerCodeCancelButton.addEventListener(
+  "click",
+  function () {
+
+    developerCodeModal.style.display =
+      "none";
+
+    developerCodeInput.value =
+      "";
+
+    pendingDeveloperEmail =
+      null;
+
+    pendingDeveloperCode =
+      null;
+
+    status.textContent =
+      "Developer verification cancelled.";
+  }
+);
     acceptTerms.addEventListener(
       "change",
       function () {

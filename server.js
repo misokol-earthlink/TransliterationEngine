@@ -275,7 +275,44 @@ function decryptApiKey(openaiKey) {
     "utf8"
   );
 }
+// --------------------------------------------------
+// Secure secret comparison
+// --------------------------------------------------
 
+function secureSecretMatch(
+  suppliedValue,
+  expectedValue
+) {
+  if (
+    !suppliedValue ||
+    !expectedValue
+  ) {
+    return false;
+  }
+
+  const suppliedHash =
+    crypto
+      .createHash("sha256")
+      .update(
+        String(suppliedValue),
+        "utf8"
+      )
+      .digest();
+
+  const expectedHash =
+    crypto
+      .createHash("sha256")
+      .update(
+        String(expectedValue),
+        "utf8"
+      )
+      .digest();
+
+  return crypto.timingSafeEqual(
+    suppliedHash,
+    expectedHash
+  );
+}
 // --------------------------------------------------
 // Cookie helper
 // --------------------------------------------------
@@ -535,15 +572,17 @@ app.post(
        * Developer and tester/backdoor users
        * do not use Supabase email verification.
        */
-      if (
-        isTester ||
-        isDeveloper
-      ) {
-        return res.json({
-          success: true,
-          bypass: true
-        });
-      }
+     if (
+  isTester ||
+  isDeveloper
+) {
+  return res.json({
+    success: true,
+    bypass: true,
+    developer:
+      isDeveloper
+  });
+}
 console.log(
   "OTP SEND REQUEST:",
   {
@@ -852,9 +891,13 @@ const accessToken =
     req.body.accessToken || ""
   ).trim();
 
-const isTester =
-  email ===
+const developerCode =
   String(
+    req.body.developerCode || ""
+  ).trim();
+
+const isTester =
+  email ===  String(
     process.env.TEST_ACCESS_CODE || ""
   )
     .trim()
@@ -875,7 +918,23 @@ if (!email) {
         "User ID is required."
     });
 }
+if (isDeveloper) {
+  const developerCodeValid =
+    secureSecretMatch(
+      developerCode,
+      process.env.DEVELOPER_CODE
+    );
 
+  if (!developerCodeValid) {
+    return res
+      .status(401)
+      .json({
+        success: false,
+        message:
+          "Invalid developer security code."
+      });
+  }
+}
 if (
   !isTester &&
   !isDeveloper &&
