@@ -761,7 +761,19 @@ adminContinueToTeButton.addEventListener(
         );
       }
 
-     if (result.developer) {
+if (result.developer) {
+  developerCodeModal.style.display =
+    "none";
+
+  developerCodeInput.value =
+    "";
+
+  pendingDeveloperEmail =
+    null;
+
+  pendingDeveloperCode =
+    null;
+
   status.textContent =
     "Developer registration found.";
 
@@ -769,7 +781,6 @@ adminContinueToTeButton.addEventListener(
 
   return;
 }
-
 status.textContent =
   "Registration successful. Opening application...";
 
