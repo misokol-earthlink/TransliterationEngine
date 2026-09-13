@@ -287,15 +287,17 @@ function loadJsonFile(event) {
 jsonReviewActive = false;
 processButton.disabled = true;
 openJsonForReviewButton.disabled = true;
-lockSourceFileInputs();
+//lockSourceFileInputs();
 downloadButton.disabled = true;
 
-  if (!file) {
-    status.textContent = "No file selected.";
-    return;
-  }
+if (!file) {
+  status.textContent = "No file selected.";
+  return;
+}
 
-  const reader = new FileReader();
+lockSourceFileInputs();
+
+const reader = new FileReader();
 
   reader.onload = function (e) {
     try {
@@ -995,7 +997,7 @@ reviewJson =
     extractedJson
   );
 
-lockSourceFileInputs();
+//lockSourceFileInputs();
 
 downloadButton.disabled = false;
 
@@ -1100,20 +1102,21 @@ downloadReviewButton.disabled = true;
       return fileName.endsWith(extension);
     });
 
-  if (
-    !hasAllowedMimeType &&
-    !hasAllowedExtension
-  ) {
-    status.innerHTML =
-      "<span style='color:red'>" +
-      "Please select a JPEG, PNG, WebP, GIF, BMP, or PDF file." +
-      "</span>";
+if (
+  !hasAllowedMimeType &&
+  !hasAllowedExtension
+) {
+  status.innerHTML =
+    "<span style='color:red'>" +
+    "Please select a JPEG, PNG, WebP, GIF, BMP, or PDF file." +
+    "</span>";
 
-    return;
-  }
+  return;
+}
 
-  currentImageFile = file;
-processImageButton.disabled = false;
+lockSourceFileInputs();
+
+currentImageFile = file;processImageButton.disabled = false;
   status.innerHTML =
     "<b>Image source selected:</b> " +
     escapeHtml(file.name) +
@@ -1247,17 +1250,19 @@ async function loadReviewFile() {
   const loadedReviewJson =
     JSON.parse(text);
 
-  if (
-    !loadedReviewJson.reviewVersion ||
-    !loadedReviewJson.lines
-  ) {
-    alert("This is not a valid Review JSON file.");
-    return;
-  }
-
- reviewJson = loadedReviewJson;
+ if (
+  !loadedReviewJson.reviewVersion ||
+  !loadedReviewJson.lines
+) {
+  alert("This is not a valid Review JSON file.");
+  return;
+}
 
 lockSourceFileInputs();
+
+reviewJson = loadedReviewJson;
+
+//lockSourceFileInputs();
 
 processButton.disabled = false;
 downloadButton.disabled = false;
