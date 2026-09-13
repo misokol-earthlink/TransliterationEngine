@@ -439,23 +439,17 @@ credentials: "include",
 }
 
 async function processJson() {
- if (jsonReviewActive) {
-    status.innerHTML =
-      "<span style='color:#b00020'>" +
-      "<b>This JSON is currently in Review mode.</b><br><br>" +
-      "Use <b>Process Extracted Hebrew</b> to transliterate " +
-      "the reviewed version, or save the Review JSON " +
-      "for later processing." +
-      "</span>";
+  const jsonToProcess =
+    reviewJson &&
+    Array.isArray(reviewJson.lines)
+      ? buildLyricsJsonFromReview()
+      : currentJson;
 
-    return;
-  }
-  if (!currentJson) {
+  if (!jsonToProcess) {
     return;
   }
 
-  processButton.disabled = true;
-  downloadButton.disabled = true;
+  processButton.disabled = true;  downloadButton.disabled = true;
   results.innerHTML = "";
 
   status.textContent =
@@ -463,7 +457,7 @@ async function processJson() {
 
   try {
     const returnedJson =
-      await transliterateLyricsJson(currentJson);
+      await transliterateLyricsJson(jsonToProcess);
 
     currentJson = returnedJson;
 
@@ -1252,8 +1246,10 @@ async function loadReviewFile() {
   }
 
   reviewJson = loadedReviewJson;
+processButton.disabled = false;
   downloadButton.disabled = false;
   startReviewButton.disabled = false;
+
   displayExtractedHebrew(reviewJson);
   downloadReviewButton.disabled = false;
 }
