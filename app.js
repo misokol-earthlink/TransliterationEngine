@@ -42,6 +42,12 @@ let reviewModalWorkingHebrew = null;
 let activeReviewLine = null;
 let reviewLineWorkingGaps = null;
 let originalReviewJson = null;
+function lockSourceFileInputs() {
+  fileInput.disabled = true;
+  imageFileInput.disabled = true;
+  reviewFileInput.disabled = true;
+}
+
 function splitReviewWordStructure(text) {
   const value = String(text || "");
 
@@ -281,6 +287,7 @@ function loadJsonFile(event) {
 jsonReviewActive = false;
 processButton.disabled = true;
 openJsonForReviewButton.disabled = true;
+lockSourceFileInputs();
 downloadButton.disabled = true;
 
   if (!file) {
@@ -983,10 +990,13 @@ if (
  * Build the Review JSON
  * from the successful OCR result.
  */
-   reviewJson =
+reviewJson =
   createReviewJson(
     extractedJson
   );
+
+lockSourceFileInputs();
+
 downloadButton.disabled = false;
 
 /*
@@ -1245,10 +1255,13 @@ async function loadReviewFile() {
     return;
   }
 
-  reviewJson = loadedReviewJson;
+ reviewJson = loadedReviewJson;
+
+lockSourceFileInputs();
+
 processButton.disabled = false;
-  downloadButton.disabled = false;
-  startReviewButton.disabled = false;
+downloadButton.disabled = false;
+startReviewButton.disabled = false;
 
   displayExtractedHebrew(reviewJson);
   downloadReviewButton.disabled = false;
