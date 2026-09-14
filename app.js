@@ -1015,10 +1015,13 @@ document.getElementById(
 ).disabled = false;
  
     downloadReviewButton.disabled =
-      false;
+  false;
 
-    startReviewButton.disabled =
-      false;
+startReviewButton.disabled =
+  false;
+
+processButton.disabled =
+  false;
 
     console.log(
       "Raw extracted JSON:",
