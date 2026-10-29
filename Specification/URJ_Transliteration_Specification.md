@@ -1,6 +1,6 @@
 ---
 name: "CCAR 2026 Hebrew Transliteration Engine"
-version: "2.1.2"
+version: "2.1.3"
 temperature: 0.1
 max_tokens: 1500
 ---
@@ -120,11 +120,13 @@ This supersedes the older specification's general instruction to drop silent fin
 
 ## Adjacent Vowels / Pronunciation Hyphens
 
-Use a hyphen to keep two adjacent written vowel sounds distinct when needed for correct pronunciation.
+A pronunciation hyphen is a reading aid, not a word boundary and not a substitute for an apostrophe. Insert one **only when two distinct adjacent vowel sounds need to be separated to make their pronunciation clear**, subject to controlling CCAR Word List forms.
 
-As an implementation rule for this application, **reinforce a hyphen between two adjacent vowel sounds when they would otherwise be read as one vowel sequence, except for `aa`, which normally remains unhyphenated**, unless a controlling CCAR Word List form says otherwise.
+First determine which written Latin letters belong to each **single Hebrew vowel sound**. Never split a single vowel's conventional transliteration spelling: tzeirei `ei` is one vowel sound, and patach-with-yod `ai` is one vowel unit. Thus `hagein` must not become `hag-ein` or `hage-in` merely because `ei` contains two letters.
 
-Examples:
+When two independently pronounced vowel sounds meet across adjacent syllables, a hyphen may clarify their separation. Apply the established examples and conventions rather than automatically inserting a hyphen whenever the Hebrew contains alef, ayin, hei, or a mater lectionis.
+
+Examples requiring pronunciation separation:
 
 - `ne-eman`
 - `samei-ach`
@@ -133,17 +135,16 @@ Examples:
 - `mei-aleinu`
 - `mei-atah`
 
-But:
+Examples normally written without a pronunciation hyphen:
 
+- `hagein` (the `ei` is the single tzeirei vowel)
 - `maariv`
 - `baadeinu`
 - `Shavuot`
 
-The Word List supplies additional conventional examples such as `HaAtzma-ut`, `hitpa-eil`, `mishlo-ach`, `mizbei-ach`, `mo-eid`, and `r’vi-i`.
+In particular, adjacent `aa` normally remains unhyphenated unless a controlling CCAR spelling requires otherwise. The Word List also supplies conventional spellings such as `HaAtzma-ut`, `hitpa-eil`, `mishlo-ach`, `mizbei-ach`, `mo-eid`, and `r’vi-i`.
 
-Do not use an apostrophe merely to separate adjacent vowels. Apostrophes are reserved for sh'va na and established CCAR spellings.
-
-Do not mechanically insert a hyphen whenever alef or ayin is silent; apply the pronunciation rule above and let a controlling Word List form override the general rule.
+Do not use an apostrophe to separate adjacent vowels. An apostrophe marks vocal sh'va or an authoritative established spelling, not a hiatus between vowels. Do not confuse a pronunciation hyphen with the Latin hyphen representing an explicit Hebrew maqaf (U+05BE).
 
 ## Prefixes
 
@@ -278,6 +279,21 @@ The following forms are useful compliance checks for the current specification:
 
 These are regression examples, not a substitute for the general rules above.
 
+## Additional transliteration compliance examples
+
+Use these as cross-checks of general rules, not as unconditional overrides of a controlling CCAR Word List entry:
+
+- `וְהָגֵן` → `v’hagein` (tzeirei → `ei`)
+- `וְהָסֵר` → `v’haseir` (tzeirei → `ei`)
+- `אוֹיֵב` → `oyeiv` (tzeirei → `ei`)
+- `וְהַרְחֵק` → `v’harcheik` (tzeirei → `ei`)
+- `וְהַעֲמִידֵנוּ` → `v’haamideinu` (hataf patach is `a`, not an apostrophe)
+- `לְמַעַן` → `l’maan` (no apostrophe merely for ayin)
+- `וְהוֹשִׁיעֵנוּ` → `v’hoshi-einu` (hyphen between distinct adjacent vowel sounds)
+
+When a recognized CCAR Word List form differs from a mechanical tzeirei conversion, follow the Word List, as required by the authority hierarchy.
+
+
 # REGRESSION PRIORITY
 
 When evaluating output:
@@ -288,6 +304,21 @@ When evaluating output:
 4. Treat published transliteration punctuation, line wrapping, and em dashes as evidence only, not as rules, unless independently supported by CCAR.
 5. Do not add one-off lexical rules when a general CCAR rule explains the case.
 6. If an older project rule conflicts with CCAR 2026, CCAR 2026 controls.
+
+# MANDATORY WORD-BY-WORD COMPLIANCE CHECK
+
+Before returning the JSON, silently verify each Hebrew word against its proposed `translit` value. This is an internal validation procedure; do not output the check or any commentary.
+
+1. Identify each vowel mark and vowel-letter combination, distinguishing a single vowel unit from two adjacent vowel sounds. In particular, inspect every U+05B5 tzeirei and apply `ei` unless an authoritative CCAR Word List form governs otherwise. Do not apply a blanket substitution to unrelated Latin `e` characters.
+2. Classify every sh'va as vocal or silent under the rules above. Ensure apostrophes represent vocal sh'va or controlling CCAR spellings, not chataf vowels, ayin/alef, or arbitrary syllable breaks.
+3. Check chataf vowels independently: hataf patach → `a`, hataf segol → `e`, hataf kamatz → `o`.
+4. Check pronunciation hyphens: separate distinct adjacent vowel sounds only when needed for clarity; never split the spelling of one vowel (`ei`, `ai`); normally leave `aa` unhyphenated. Preserve any source maqaf as its own standard Latin hyphen.
+5. Check recognized CCAR Word List spellings and Divine Names before accepting a mechanical rendering.
+6. Check punctuation against the Hebrew source; do not import commas, em dashes, or line breaks from a published English comparison.
+7. Check capitalization across all lines according to the document's cantillation mode and sentence boundaries.
+8. Confirm the output has the same JSON structure, ordering, and exactly unchanged `hebrew` values; only `translit` values may differ.
+
+If two rules appear to conflict, resolve them using REGRESSION PRIORITY and the stated CCAR authority hierarchy. Do not invent an exception simply to imitate a published transliteration.
 
 # OUTPUT REQUIREMENTS
 
